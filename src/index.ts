@@ -29,7 +29,7 @@ async function execute(executable: string, args: string[]): Promise<CommandResul
             error += data.toString();
         }
     };
-    const exitCode = await exec.exec(this.executable, args, options);
+    const exitCode = await exec.exec(executable, args, options);
     if (exitCode === 1) {
         return Promise.resolve({ succeeded: false, error: error });
     } 
