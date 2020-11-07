@@ -1,0 +1,22 @@
+name: 'Lucas Test Push To Quay Action'
+description: 'This action allows you to push an image to Quay'
+author: 'Luca'
+branding:
+  icon: circle
+  color: red
+inputs:
+  image-to-push:
+    description: 'Name of the new image that will be pushed'
+    required: true
+  quay-registry:
+    description: 'Quay repo where to push the image'
+    required: true
+  username:
+    description: 'Username to use as credential to authenticate to the registry'
+    required: true
+  password:
+    description: 'Password to use as credential to authenticate to the registry'
+    required: true
+runs:
+  using: 'node12'
+  main: 'dist/index.js'
