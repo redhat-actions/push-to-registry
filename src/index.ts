@@ -19,9 +19,11 @@ export async function run(): Promise<void> {
         return Promise.reject(new Error(checkImages.reason));
     }    
     const parsedCheckImages = JSON.parse(checkImages.output);
+    // this is to temporarily solve an issue with the case-sensitive of the property field name. i.e it is Names or names?? 
+    const nameKeyMixedCase = parsedCheckImages[0] && Object.keys(parsedCheckImages[0]).find(key => 'names' === key.toLowerCase());
     const imagesFound = parsedCheckImages.
-                            filter(image => image.names && image.names.find(name => name.includes(`${imageToPush}:${tag}`))).
-                            map(image => image.names);
+                            filter(image => image[nameKeyMixedCase] && image[nameKeyMixedCase].find(name => name.includes(`${imageToPush}:${tag}`))).
+                            map(image => image[nameKeyMixedCase]);
     if (imagesFound.length === 0) {
         //check inside the docker daemon local storage
         const pullFromDocker: CommandResult = await execute(podman, ['pull', `docker-daemon:${imageToPush}:${tag}`]);
