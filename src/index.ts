@@ -20,7 +20,7 @@ export async function run(): Promise<void> {
     }    
     const parsedCheckImages = JSON.parse(checkImages.output);
     const imagesFound = parsedCheckImages.
-                            filter(image => image.names && image.names.find(name => name.includes("alpine:latewst"))).
+                            filter(image => image.names && image.names.find(name => name.includes(`${imageToPush}:${tag}`))).
                             map(image => image.names);
     if (imagesFound.length === 0) {
         //check inside the docker daemon local storage
