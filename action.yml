@@ -1,6 +1,6 @@
-name: 'Lucas Test Push To Quay Action'
+name: 'Push To Registry'
 description: 'This action allows you to push an image to Quay'
-author: 'Luca'
+author: 'Red Hat'
 branding:
   icon: circle
   color: red
