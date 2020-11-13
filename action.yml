@@ -8,7 +8,11 @@ inputs:
   image-to-push:
     description: 'Name of the new image that will be pushed'
     required: true
-  quay-registry:
+  tag:
+    description: 'Tag of the new image'
+    required: false
+    default: 'latest'
+  registry:
     description: 'Quay repo where to push the image'
     required: true
   username:
