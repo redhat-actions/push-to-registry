@@ -4,7 +4,7 @@ import * as io from '@actions/io';
 import { CommandResult } from './types';
 
 export async function run(): Promise<void> {
-    const imageToPush = core.getInput('image-to-push');
+    let imageToPush = core.getInput('image-to-push');
     const tag = core.getInput('tag') || 'latest';
     const registry = core.getInput('registry');
     const username = core.getInput('username');
@@ -13,6 +13,7 @@ export async function run(): Promise<void> {
     // get podman cli
     const podman = await io.which('podman', true);
 
+    imageToPush = `${imageToPush}:${tag}`;
     //check if images exist in podman's local storage
     const checkImages: CommandResult = await execute(podman, ['images', '--format', 'json']);
     if (checkImages.succeeded === false) {
@@ -22,18 +23,18 @@ export async function run(): Promise<void> {
     // this is to temporarily solve an issue with the case-sensitive of the property field name. i.e it is Names or names?? 
     const nameKeyMixedCase = parsedCheckImages[0] && Object.keys(parsedCheckImages[0]).find(key => 'names' === key.toLowerCase());
     const imagesFound = parsedCheckImages.
-                            filter(image => image[nameKeyMixedCase] && image[nameKeyMixedCase].find(name => name.includes(`${imageToPush}:${tag}`))).
+                            filter(image => image[nameKeyMixedCase] && image[nameKeyMixedCase].find(name => name.includes(`${imageToPush}`))).
                             map(image => image[nameKeyMixedCase]);
     if (imagesFound.length === 0) {
         //check inside the docker daemon local storage
-        const pullFromDocker: CommandResult = await execute(podman, ['pull', `docker-daemon:${imageToPush}:${tag}`]);
+        const pullFromDocker: CommandResult = await execute(podman, ['pull', `docker-daemon:${imageToPush}`]);
         if (pullFromDocker.succeeded === false) {
             return Promise.reject(new Error(`Unable to find the image to push`));
         }
     }
 
     // push image
-    const registryUrl = `${registry.replace(/\/$/, '')}:${tag}`;
+    const registryUrl = `${registry.replace(/\/$/, '')}/${imageToPush}`;
     const push: CommandResult = await execute(podman, ['push', '--creds', `${username}:${password}`, `${imageToPush}`, `${registryUrl}`]);
     if (push.succeeded === false) {
         return Promise.reject(new Error(push.reason));

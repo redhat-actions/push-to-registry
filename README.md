@@ -24,7 +24,7 @@ Push-to-registry is a GitHub Action for pushing an OCI-compatible image to any r
 
   <tr>
     <td>registry</td>
-    <td>(Required) Registry where to push the image. E.g https://quay.io/yourusername/yourrepo</td>
+    <td>(Required) Registry where to push the image. E.g https://quay.io/username</td>
   </tr>
 
   <tr>
@@ -37,6 +37,47 @@ Push-to-registry is a GitHub Action for pushing an OCI-compatible image to any r
     <td>(Required) Password to use as credential to authenticate to the registry</td>
   </tr>
 </table>
+
+## Examples
+
+The example below shows how the `push-to-registry` action can be used to push an image created by the [`buildah-action`](https://github.com/redhat-actions/buildah-action) in an early step.
+
+```
+name: CI
+on: [push]
+
+jobs:
+  build:
+    name: Build image
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+
+    - name: Maven
+      run: |
+        cd ${GITHUB_WORKSPACE}
+        mvn package
+    - name: Build Action
+      uses: redhat-actions/buildah-action@0.0.1
+      with:
+        new-image-name: petclinic
+        content: |
+          target/spring-petclinic-2.3.0.BUILD-SNAPSHOT.jar
+        entrypoint: |
+          java    
+          -jar
+          spring-petclinic-2.3.0.BUILD-SNAPSHOT.jar
+        port: 8080
+    - name: Push To Quay
+      uses: redhat-actions/push-to-registry@0.0.1
+      with:
+        image-to-push: petclinic
+        registry: ${{ secrets.QUAY_REPO }}
+        username: ${{ secrets.QUAY_USERNAME }}
+        password: ${{ secrets.QUAY_PASSWORD }}
+```
 
 
 ## Contributing

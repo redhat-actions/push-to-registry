@@ -13,7 +13,7 @@ inputs:
     required: false
     default: 'latest'
   registry:
-    description: 'Quay repo where to push the image'
+    description: 'Registry where to push the image (e.g quay.io/username)'
     required: true
   username:
     description: 'Username to use as credential to authenticate to the registry'
