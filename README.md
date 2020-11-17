@@ -1,5 +1,9 @@
 # push-to-registry
 
+[![tag badge](https://img.shields.io/github/v/tag/redhat-actions/push-to-registry?sort=semver)](https://github.com/redhat-actions/push-to-registry/tags)
+[![license badge](https://img.shields.io/github/license/redhat-actions/push-to-registry)](./LICENSE)
+[![size badge](https://img.shields.io/github/size/redhat-actions/push-to-registry/dist/index.js)](./dist)
+
 Push-to-registry is a GitHub Action for pushing an OCI-compatible image to an image registry, such as Dockerhub, Quay&#46;io, or an OpenShift integrated registry.
 
 ## Action Inputs
