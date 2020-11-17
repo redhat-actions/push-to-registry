@@ -1,40 +1,52 @@
 # push-to-registry
 
-Push-to-registry is a GitHub Action for pushing an OCI-compatible image to any registry.
+Push-to-registry is a GitHub Action for pushing an OCI-compatible image to an image registry, such as Dockerhub, Quay&#46;io, or an OpenShift integrated registry.
 
 ## Action Inputs
 
 <table>
   <thead>
     <tr>
-      <th>Action input</th>
+      <th>Input</th>
+      <th>Required</th>
       <th>Description</th>
     </tr>
   </thead>
 
   <tr>
-    <td>image-to-push:/td>
-    <td>(Required) Name of the image you want to push. Most likely the name you used to create it in the previous step.</td>
+    <td>image-to-push</td>
+    <td>Yes</td>
+    <td>
+      Name of the image you want to push. Most likely the name you used to create the image in the previous step.
+    </td>
   </tr>
 
   <tr>
     <td>tag</td>
-    <td>(Optional) Tag of the image. Default value: latest.</td>
+    <td>No</td>
+    <td>
+      Image tag to push.<br>
+      Defaults to <code>latest</code>.
+    </td>
   </tr>
 
   <tr>
     <td>registry</td>
-    <td>(Required) Registry where to push the image. E.g https://quay.io/username</td>
+    <td>Yes</td>
+    <td>URL of the registry to push the image to.<br>
+    Eg. <code>https://quay.io/&lt;username&gt;</code></td>
   </tr>
 
   <tr>
     <td>username</td>
-    <td>(Required) Username to use as credential to authenticate to the registry</td>
+    <td>Yes</td>
+    <td>Username with which to authenticate to the registry.</td>
   </tr>
 
   <tr>
     <td>password</td>
-    <td>(Required) Password to use as credential to authenticate to the registry</td>
+    <td>Yes</td>
+    <td>Password or personal access token with which to authenticate to the registry.</td>
   </tr>
 </table>
 
@@ -42,14 +54,17 @@ Push-to-registry is a GitHub Action for pushing an OCI-compatible image to any r
 
 The example below shows how the `push-to-registry` action can be used to push an image created by the [`buildah-action`](https://github.com/redhat-actions/buildah-action) in an early step.
 
-```
-name: CI
+```yaml
+name: Build and Push Image
 on: [push]
 
 jobs:
   build:
     name: Build image
     runs-on: ubuntu-latest
+    env:
+      IMAGE_NAME: petclinic
+      BUILT_JAR: "target/spring-petclinic-2.3.0.BUILD-SNAPSHOT.jar"
 
     steps:
     - name: Checkout
@@ -59,26 +74,25 @@ jobs:
       run: |
         cd ${GITHUB_WORKSPACE}
         mvn package
-    - name: Build Action
+    - name: Build Image
       uses: redhat-actions/buildah-action@0.0.1
       with:
-        new-image-name: petclinic
+        new-image-name: ${{ env.IMAGE_NAME }}
         content: |
-          target/spring-petclinic-2.3.0.BUILD-SNAPSHOT.jar
+          ${{ env.BUILT_JAR }}
         entrypoint: |
-          java    
+          java
           -jar
-          spring-petclinic-2.3.0.BUILD-SNAPSHOT.jar
+          ${{ env.BUILT_JAR }}
         port: 8080
     - name: Push To Quay
       uses: redhat-actions/push-to-registry@0.0.1
       with:
-        image-to-push: petclinic
+        image-to-push: ${{ env.IMAGE_NAME }}
         registry: ${{ secrets.QUAY_REPO }}
         username: ${{ secrets.QUAY_USERNAME }}
-        password: ${{ secrets.QUAY_PASSWORD }}
+        password: ${{ secrets.QUAY_TOKEN }}
 ```
-
 
 ## Contributing
 
@@ -90,4 +104,4 @@ If you discover an issue please file a bug in [GitHub issues](https://github.com
 
 ## License
 
-MIT, See [LICENSE](https://github.com/redhat-actions/push-to-registry/blob/main/LICENSE.md) for more information.
+MIT, See [LICENSE](./LICENSE) for more information.
