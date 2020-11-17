@@ -4,11 +4,11 @@ import * as io from '@actions/io';
 import { CommandResult } from './types';
 
 export async function run(): Promise<void> {
-    let imageToPush = core.getInput('image-to-push');
+    let imageToPush = core.getInput('image', { required: true });
     const tag = core.getInput('tag') || 'latest';
-    const registry = core.getInput('registry');
-    const username = core.getInput('username');
-    const password = core.getInput('password');    
+    const registry = core.getInput('registry', { required: true });
+    const username = core.getInput('username', { required: true });
+    const password = core.getInput('password', { required: true });
 
     // get podman cli
     const podman = await io.which('podman', true);
@@ -18,9 +18,9 @@ export async function run(): Promise<void> {
     const checkImages: CommandResult = await execute(podman, ['images', '--format', 'json']);
     if (checkImages.succeeded === false) {
         return Promise.reject(new Error(checkImages.reason));
-    }    
+    }
     const parsedCheckImages = JSON.parse(checkImages.output);
-    // this is to temporarily solve an issue with the case-sensitive of the property field name. i.e it is Names or names?? 
+    // this is to temporarily solve an issue with the case-sensitive of the property field name. i.e it is Names or names??
     const nameKeyMixedCase = parsedCheckImages[0] && Object.keys(parsedCheckImages[0]).find(key => 'names' === key.toLowerCase());
     const imagesFound = parsedCheckImages.
                             filter(image => image[nameKeyMixedCase] && image[nameKeyMixedCase].find(name => name.includes(`${imageToPush}`))).
@@ -44,7 +44,7 @@ export async function run(): Promise<void> {
 async function execute(executable: string, args: string[]): Promise<CommandResult> {
     let output = '';
     let error = '';
-    
+
     const options: exec.ExecOptions = {};
     options.listeners = {
         stdout: (data: Buffer): void => {
@@ -57,7 +57,7 @@ async function execute(executable: string, args: string[]): Promise<CommandResul
     const exitCode = await exec.exec(executable, args, options);
     if (exitCode === 1) {
         return Promise.resolve({ succeeded: false, error });
-    } 
+    }
     return Promise.resolve({ succeeded: true, output });
 }
 

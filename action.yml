@@ -5,15 +5,15 @@ branding:
   icon: circle
   color: red
 inputs:
-  image-to-push:
-    description: 'Name of the new image that will be pushed'
+  image:
+    description: 'Name of the image to push'
     required: true
   tag:
-    description: 'Tag of the new image'
+    description: 'Tag of the image to push'
     required: false
     default: 'latest'
   registry:
-    description: 'Registry where to push the image (e.g quay.io/username)'
+    description: 'Registry where to push the image (eg. quay.io/username)'
     required: true
   username:
     description: 'Username to use as credential to authenticate to the registry'

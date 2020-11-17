@@ -1,5 +1,6 @@
 # push-to-registry
 
+[![Verify Bundle](https://github.com/redhat-actions/push-to-registry/workflows/Verify%20Bundle/badge.svg)](https://github.com/redhat-actions/push-to-registry/actions?query=workflow%3A%22Verify+Bundle%22)
 [![tag badge](https://img.shields.io/github/v/tag/redhat-actions/push-to-registry?sort=semver)](https://github.com/redhat-actions/push-to-registry/tags)
 [![license badge](https://img.shields.io/github/license/redhat-actions/push-to-registry)](./LICENSE)
 [![size badge](https://img.shields.io/github/size/redhat-actions/push-to-registry/dist/index.js)](./dist)
@@ -18,7 +19,7 @@ Push-to-registry is a GitHub Action for pushing an OCI-compatible image to an im
   </thead>
 
   <tr>
-    <td>image-to-push</td>
+    <td>image</td>
     <td>Yes</td>
     <td>
       Name of the image you want to push. Most likely the name you used to create the image in the previous step.
@@ -92,7 +93,7 @@ jobs:
     - name: Push To Quay
       uses: redhat-actions/push-to-registry@0.0.1
       with:
-        image-to-push: ${{ env.IMAGE_NAME }}
+        image: ${{ env.IMAGE_NAME }}
         registry: ${{ secrets.QUAY_REPO }}
         username: ${{ secrets.QUAY_USERNAME }}
         password: ${{ secrets.QUAY_TOKEN }}
