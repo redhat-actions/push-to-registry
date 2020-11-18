@@ -22,7 +22,7 @@ Push-to-registry is a GitHub Action for pushing an OCI-compatible image to an im
     <td>image</td>
     <td>Yes</td>
     <td>
-      Name of the image you want to push. Most likely the name you used to create the image in the previous step.
+      Name of the image you want to push.
     </td>
   </tr>
 
@@ -39,7 +39,7 @@ Push-to-registry is a GitHub Action for pushing an OCI-compatible image to an im
     <td>registry</td>
     <td>Yes</td>
     <td>URL of the registry to push the image to.<br>
-    Eg. <code>https://quay.io/&lt;username&gt;</code></td>
+    Eg. <code>quay.io/&lt;username&gt;</code></td>
   </tr>
 
   <tr>
@@ -72,13 +72,10 @@ jobs:
       BUILT_JAR: "target/spring-petclinic-2.3.0.BUILD-SNAPSHOT.jar"
 
     steps:
-    - name: Checkout
-      uses: actions/checkout@v2
+    - uses: actions/checkout@v2
 
-    - name: Maven
-      run: |
-        cd ${GITHUB_WORKSPACE}
-        mvn package
+    - run: mvn package
+
     - name: Build Image
       uses: redhat-actions/buildah-action@0.0.1
       with:
@@ -91,7 +88,7 @@ jobs:
           ${{ env.BUILT_JAR }}
         port: 8080
     - name: Push To Quay
-      uses: redhat-actions/push-to-registry@0.0.1
+      uses: redhat-actions/push-to-registry@v1
       with:
         image: ${{ env.IMAGE_NAME }}
         registry: ${{ secrets.QUAY_REPO }}
