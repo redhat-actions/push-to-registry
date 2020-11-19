@@ -55,6 +55,12 @@ Push-to-registry is a GitHub Action for pushing an OCI-compatible image to an im
   </tr>
 </table>
 
+## Action Outputs
+
+This action produces these outputs which can be used for further processing in different Github action:
+
+**image-url**: Contains complete URL of the image which is pushed using this action. (e.g. `quay.io/username/spring-image:v1`)
+
 ## Examples
 
 The example below shows how the `push-to-registry` action can be used to push an image created by the [`buildah-action`](https://github.com/redhat-actions/buildah-action) in an early step.

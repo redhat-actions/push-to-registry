@@ -21,6 +21,9 @@ inputs:
   password:
     description: 'Password to use as credential to authenticate to the registry'
     required: true
+outputs:
+  image-url:
+    description: 'Complete URL of the pushed image'
 runs:
   using: 'node12'
   main: 'dist/index.js'

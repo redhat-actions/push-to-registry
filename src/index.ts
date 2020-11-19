@@ -40,6 +40,8 @@ export async function run(): Promise<void> {
         return Promise.reject(new Error(push.reason));
     }
     core.info(`Successfully pushed ${imageToPush} to ${registryUrl}.`);
+    
+    core.setOutput('image-url', registryUrl);
 }
 
 async function execute(executable: string, args: string[]): Promise<CommandResult> {
