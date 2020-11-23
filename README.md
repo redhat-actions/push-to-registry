@@ -7,6 +7,8 @@
 
 Push-to-registry is a GitHub Action for pushing an OCI-compatible image to an image registry, such as Dockerhub, Quay&#46;io, or an OpenShift integrated registry.
 
+This action only runs on Linux, as it uses [podman](https://github.com/containers/Podman) to perform the push. [GitHub's Ubuntu action runners](https://github.com/actions/virtual-environments#available-environments) come with Podman preinstalled. If you are not using those runners, you must first [install Podman](https://podman.io/getting-started/installation).
+
 ## Action Inputs
 
 <table>
@@ -51,13 +53,20 @@ Push-to-registry is a GitHub Action for pushing an OCI-compatible image to an im
   <tr>
     <td>password</td>
     <td>Yes</td>
-    <td>Password or personal access token with which to authenticate to the registry.</td>
+    <td>Password, encrypted password, or access token with which to authenticate to the registry.</td>
   </tr>
 </table>
 
+## Action Outputs
+
+This action produces these outputs which can be used for further processing in different Github action:
+
+`registry-path`: The registry path to which the image was pushed.<br>
+For example, `quay.io/username/spring-image:v1`.
+
 ## Examples
 
-The example below shows how the `push-to-registry` action can be used to push an image created by the [`buildah-action`](https://github.com/redhat-actions/buildah-action) in an early step.
+The example below shows how the `push-to-registry` action can be used to push an image created by the [buildah-build](https://github.com/redhat-actions/buildah-build) action.
 
 ```yaml
 name: Build and Push Image
@@ -65,35 +74,34 @@ on: [push]
 
 jobs:
   build:
-    name: Build image
+    name: Build and push image
     runs-on: ubuntu-latest
     env:
-      IMAGE_NAME: petclinic
-      BUILT_JAR: "target/spring-petclinic-2.3.0.BUILD-SNAPSHOT.jar"
+      IMAGE_NAME: my-app
+      IMAGE_TAG: latest
 
     steps:
     - uses: actions/checkout@v2
 
-    - run: mvn package
-
     - name: Build Image
-      uses: redhat-actions/buildah-action@0.0.1
+      uses: redhat-actions/buildah-build@v1
       with:
-        new-image-name: ${{ env.IMAGE_NAME }}
-        content: |
-          ${{ env.BUILT_JAR }}
-        entrypoint: |
-          java
-          -jar
-          ${{ env.BUILT_JAR }}
-        port: 8080
+        image: ${{ env.IMAGE_NAME }}
+        tag: ${{ env.TAG }}
+        dockerfiles: |
+          ./Dockerfile
+
     - name: Push To Quay
+      id: push-to-quay
       uses: redhat-actions/push-to-registry@v1
       with:
         image: ${{ env.IMAGE_NAME }}
+        tag: ${{ env.TAG }}
         registry: ${{ secrets.QUAY_REPO }}
         username: ${{ secrets.QUAY_USERNAME }}
         password: ${{ secrets.QUAY_TOKEN }}
+
+    # The output is stored in ${{ steps.push-to-quay.outputs.registry-path }}
 ```
 
 ## Contributing

@@ -14,6 +14,12 @@ export async function run(): Promise<void> {
     const podman = await io.which('podman', true);
 
     imageToPush = `${imageToPush}:${tag}`;
+    let pushMsg = `Pushing ${imageToPush} to ${registry}`;
+    if (username) {
+        pushMsg += ` as ${username}`;
+    }
+    core.info(pushMsg);
+
     //check if images exist in podman's local storage
     const checkImages: CommandResult = await execute(podman, ['images', '--format', 'json']);
     if (checkImages.succeeded === false) {
@@ -34,12 +40,16 @@ export async function run(): Promise<void> {
     }
 
     // push image
-    const registryUrl = `${registry.replace(/\/$/, '')}/${imageToPush}`;
-    const push: CommandResult = await execute(podman, ['push', '--quiet', '--creds', `${username}:${password}`, `${imageToPush}`, `${registryUrl}`]);
+    const registryPath = `${registry.replace(/\/$/, '')}/${imageToPush}`;
+
+    const creds: string = `${username}:${password}`;
+    const push: CommandResult = await execute(podman, ['push', '--quiet', '--creds', creds, imageToPush, registryPath]);
     if (push.succeeded === false) {
         return Promise.reject(new Error(push.reason));
     }
-    core.info(`Successfully pushed ${imageToPush} to ${registryUrl}.`);
+    core.info(`Successfully pushed ${imageToPush} to ${registryPath}.`);
+
+    core.setOutput('registry-path', registryPath);
 }
 
 async function execute(executable: string, args: string[]): Promise<CommandResult> {
