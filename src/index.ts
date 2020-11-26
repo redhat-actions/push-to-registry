@@ -1,7 +1,7 @@
 import * as core from '@actions/core';
 import * as exec from '@actions/exec';
 import * as io from '@actions/io';
-import { CommandResult } from './types';
+import * as path from "path";
 
 export async function run(): Promise<void> {
     let imageToPush = core.getInput('image', { required: true });
@@ -21,55 +21,63 @@ export async function run(): Promise<void> {
     core.info(pushMsg);
 
     //check if images exist in podman's local storage
-    const checkImages: CommandResult = await execute(podman, ['images', '--format', 'json']);
-    if (checkImages.succeeded === false) {
-        return Promise.reject(new Error(checkImages.reason));
-    }
-    const parsedCheckImages = JSON.parse(checkImages.output);
+    const checkImages = await execute(podman, ['images', '--format', 'json']);
+
+    const parsedCheckImages = JSON.parse(checkImages.stdout);
+
     // this is to temporarily solve an issue with the case-sensitive of the property field name. i.e it is Names or names??
     const nameKeyMixedCase = parsedCheckImages[0] && Object.keys(parsedCheckImages[0]).find(key => 'names' === key.toLowerCase());
     const imagesFound = parsedCheckImages.
-                            filter(image => image[nameKeyMixedCase] && image[nameKeyMixedCase].find(name => name.includes(`${imageToPush}`))).
-                            map(image => image[nameKeyMixedCase]);
+                            filter((image: string) => image[nameKeyMixedCase] && image[nameKeyMixedCase].find((name: string) => name.includes(`${imageToPush}`))).
+                            map((image: string ) => image[nameKeyMixedCase]);
+
     if (imagesFound.length === 0) {
         //check inside the docker daemon local storage
-        const pullFromDocker: CommandResult = await execute(podman, ['pull', `docker-daemon:${imageToPush}`]);
-        if (pullFromDocker.succeeded === false) {
-            return Promise.reject(new Error(`Unable to find the image to push`));
-        }
+        await execute(podman, ['pull', `docker-daemon:${imageToPush}`]);
     }
 
     // push image
     const registryPath = `${registry.replace(/\/$/, '')}/${imageToPush}`;
 
     const creds: string = `${username}:${password}`;
-    const push: CommandResult = await execute(podman, ['push', '--quiet', '--creds', creds, imageToPush, registryPath]);
-    if (push.succeeded === false) {
-        return Promise.reject(new Error(push.reason));
-    }
+
+    await execute(podman, ['push', '--quiet', '--creds', creds, imageToPush, registryPath]);
+
     core.info(`Successfully pushed ${imageToPush} to ${registryPath}.`);
 
     core.setOutput('registry-path', registryPath);
 }
 
-async function execute(executable: string, args: string[]): Promise<CommandResult> {
-    let output = '';
-    let error = '';
+async function execute(executable: string, args: string[], execOptions: exec.ExecOptions = {}): Promise<{ exitCode: number, stdout: string, stderr: string }> {
+    let stdout = "";
+    let stderr = "";
 
-    const options: exec.ExecOptions = {};
-    options.listeners = {
-        stdout: (data: Buffer): void => {
-            output += data.toString();
+    const finalExecOptions = { ...execOptions };
+    finalExecOptions.ignoreReturnCode = true;     // the return code is processed below
+
+    finalExecOptions.listeners = {
+        stdline: (line) => {
+            stdout += line + "\n";
         },
-        stderr: (data: Buffer): void => {
-            error += data.toString();
-        }
-    };
-    const exitCode = await exec.exec(executable, args, options);
-    if (exitCode === 1) {
-        return Promise.resolve({ succeeded: false, error });
+        errline: (line) => {
+            stderr += line + "\n"
+        },
     }
-    return Promise.resolve({ succeeded: true, output });
+
+    const exitCode = await exec.exec(executable, args, finalExecOptions);
+
+    if (execOptions.ignoreReturnCode !== true && exitCode !== 0) {
+        // Throwing the stderr as part of the Error makes the stderr show up in the action outline, which saves some clicking when debugging.
+        let error = `${path.basename(executable)} exited with code ${exitCode}`;
+        if (stderr) {
+            error += `\n${stderr}`;
+        }
+        throw new Error(error);
+    }
+
+    return {
+        exitCode, stdout, stderr
+    };
 }
 
 run().catch(core.setFailed);
