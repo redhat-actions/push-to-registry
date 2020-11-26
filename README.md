@@ -59,7 +59,7 @@ This action only runs on Linux, as it uses [podman](https://github.com/container
 
 ## Action Outputs
 
-This action produces these outputs which can be used for further processing in different Github action:
+This action produces one output which can be referenced in other workflow `steps`.
 
 `registry-path`: The registry path to which the image was pushed.<br>
 For example, `quay.io/username/spring-image:v1`.
@@ -101,8 +101,14 @@ jobs:
         username: ${{ secrets.QUAY_USERNAME }}
         password: ${{ secrets.QUAY_TOKEN }}
 
-    # The output is stored in ${{ steps.push-to-quay.outputs.registry-path }}
+    - name: Use the image
+      run: echo "New image has been pushed to ${{ steps.push-to-quay.outputs.registry-path }}"
 ```
+
+## Troubleshooting
+Note that quay.io repositories are private by default.<br>
+
+This means that if you push an image for the first time, you will have to authenticate before pulling it, or go to the repository's settings and change its visibility.
 
 ## Contributing
 
