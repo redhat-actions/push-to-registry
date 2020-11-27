@@ -21,9 +21,14 @@ inputs:
   password:
     description: 'Password to use as credential to authenticate to the registry'
     required: true
+  tls-verify:
+    description: 'Verify TLS certificates when contacting the registry'
+    required: false
+    default: 'true'
+  
 outputs:
-  image-url:
-    description: 'Complete URL of the pushed image'
+  registry-path:
+    description: 'The registry path to which the image was pushed'
 runs:
   using: 'node12'
   main: 'dist/index.js'

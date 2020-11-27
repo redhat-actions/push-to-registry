@@ -5,7 +5,7 @@
 [![license badge](https://img.shields.io/github/license/redhat-actions/push-to-registry)](./LICENSE)
 [![size badge](https://img.shields.io/github/size/redhat-actions/push-to-registry/dist/index.js)](./dist)
 
-Push-to-registry is a GitHub Action for pushing an OCI-compatible image to an image registry, such as Dockerhub, Quay&#46;io, or an OpenShift integrated registry.
+Push-to-registry is a GitHub Action for pushing a container image to an image registry, such as Dockerhub, Quay&#46;io, or an OpenShift integrated registry.
 
 This action only runs on Linux, as it uses [podman](https://github.com/containers/Podman) to perform the push. [GitHub's Ubuntu action runners](https://github.com/actions/virtual-environments#available-environments) come with Podman preinstalled. If you are not using those runners, you must first [install Podman](https://podman.io/getting-started/installation).
 
@@ -54,6 +54,12 @@ This action only runs on Linux, as it uses [podman](https://github.com/container
     <td>password</td>
     <td>Yes</td>
     <td>Password, encrypted password, or access token with which to authenticate to the registry.</td>
+  </tr>
+
+   <tr>
+    <td>tls-verify</td>
+    <td>No</td>
+    <td>Verify TLS certificates when contacting the registry. Set to "false" to skip certificate verification.</td>
   </tr>
 </table>
 
