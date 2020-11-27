@@ -1,5 +1,5 @@
 name: 'Push To Registry'
-description: 'This action allows you to push an image to Quay'
+description: 'Push a container image to an image registry'
 author: 'Red Hat'
 branding:
   icon: circle
