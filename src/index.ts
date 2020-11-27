@@ -9,6 +9,7 @@ export async function run(): Promise<void> {
     const registry = core.getInput('registry', { required: true });
     const username = core.getInput('username', { required: true });
     const password = core.getInput('password', { required: true });
+    const tlsVerify = core.getInput('tls-verify');
 
     // get podman cli
     const podman = await io.which('podman', true);
@@ -41,7 +42,14 @@ export async function run(): Promise<void> {
 
     const creds: string = `${username}:${password}`;
 
-    await execute(podman, ['push', '--quiet', '--creds', creds, imageToPush, registryPath]);
+    const args: string[] = ['push', '--quiet', '--creds', creds, imageToPush, registryPath];
+
+    // check if tls-verify is not set to null
+    if (tlsVerify) {
+        args.push(`--tls-verify=${tlsVerify}`);
+    }
+
+    await execute(podman, args);
 
     core.info(`Successfully pushed ${imageToPush} to ${registryPath}.`);
 
