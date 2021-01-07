@@ -11,6 +11,8 @@ This action only runs on Linux, as it uses [podman](https://github.com/container
 
 ## Action Inputs
 
+Refer to the [`podman push`](http://docs.podman.io/en/latest/markdown/podman-manifest-push.1.html) documentation for more information.
+
 <table>
   <thead>
     <tr>
@@ -61,14 +63,21 @@ This action only runs on Linux, as it uses [podman](https://github.com/container
     <td>No</td>
     <td>Verify TLS certificates when contacting the registry. Set to "false" to skip certificate verification.</td>
   </tr>
+
+  <tr>
+    <td>digestfile</td>
+    <td>No</td>
+    <td>After copying the image, write the digest of the resulting image to the file. By default, the filename will be determined from the image and tag.
+    The contents of this file are the <code>digest</code> output.
 </table>
 
 ## Action Outputs
 
-This action produces one output which can be referenced in other workflow `steps`.
-
 `registry-path`: The registry path to which the image was pushed.<br>
 For example, `quay.io/username/spring-image:v1`.
+
+`digest`: The pushed image digest, as written to the `digestfile`.<br>
+For example, `sha256:66ce924069ec4181725d15aa27f34afbaf082f434f448dc07a42daa3305cdab3`.
 
 ## Examples
 
