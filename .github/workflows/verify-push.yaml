@@ -2,7 +2,7 @@
 # is some change in code done to ensure that the changes
 # are not buggy and we are getting the desired output.
 name: Test Push
-on: [push, pull_request, workflow_dispatch]
+on: [ push, pull_request, workflow_dispatch ]
 env:
   IMAGE_NAME: hello-world
   IMAGE_REGISTRY: quay.io
@@ -11,7 +11,7 @@ env:
 jobs:
   build:
     name: Push image to Quay.io
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     steps:
       # Checkout push-to-registry action github repository
       - name: Checkout Push to Registry action
@@ -24,9 +24,16 @@ jobs:
       # Push the image to image registry
       - name: Push To Quay
         uses: ./
+        id: push
         with:
           image: ${{ env.IMAGE_NAME }}
           tag: ${{ env.IMAGE_TAG }}
           registry: ${{ env.IMAGE_REGISTRY }}/${{ secrets.REGISTRY_USER }}
           username: ${{ secrets.REGISTRY_USER }}
           password: ${{ secrets.REGISTRY_PASSWORD }}
+
+
+      - name: Echo outputs
+        run: |
+          echo "registry-path ${{ steps.push.outputs.registry-path }}"
+          echo "digest ${{ steps.push.outputs.digest }}"

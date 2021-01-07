@@ -1,20 +1,22 @@
 import * as core from '@actions/core';
 import * as exec from '@actions/exec';
 import * as io from '@actions/io';
+import * as fs from "fs";
 import * as path from "path";
 
 export async function run(): Promise<void> {
-    let imageToPush = core.getInput('image', { required: true });
+    const imageInput = core.getInput('image', { required: true });
     const tag = core.getInput('tag') || 'latest';
     const registry = core.getInput('registry', { required: true });
     const username = core.getInput('username', { required: true });
     const password = core.getInput('password', { required: true });
     const tlsVerify = core.getInput('tls-verify');
+    const digestFileInput = core.getInput('digestfile');
 
     // get podman cli
     const podman = await io.which('podman', true);
 
-    imageToPush = `${imageToPush}:${tag}`;
+    const imageToPush = `${imageInput}:${tag}`;
     let pushMsg = `Pushing ${imageToPush} to ${registry}`;
     if (username) {
         pushMsg += ` as ${username}`;
@@ -34,7 +36,7 @@ export async function run(): Promise<void> {
 
     if (imagesFound.length === 0) {
         //check inside the docker daemon local storage
-        await execute(podman, ['pull', `docker-daemon:${imageToPush}`]);
+        await execute(podman, [ 'pull', `docker-daemon:${imageToPush}` ]);
     }
 
     // push image
@@ -42,7 +44,15 @@ export async function run(): Promise<void> {
 
     const creds: string = `${username}:${password}`;
 
-    const args: string[] = ['push', '--quiet', '--creds', creds, imageToPush, registryPath];
+    const digestFile = digestFileInput || `${imageToPush.replace(":", "_")}_digest.txt`;
+
+    const args = [ 'push',
+        '--quiet',
+        '--digestfile', digestFile,
+        '--creds', creds,
+        imageToPush,
+        registryPath
+    ];
 
     // check if tls-verify is not set to null
     if (tlsVerify) {
@@ -52,8 +62,16 @@ export async function run(): Promise<void> {
     await execute(podman, args);
 
     core.info(`Successfully pushed ${imageToPush} to ${registryPath}.`);
-
     core.setOutput('registry-path', registryPath);
+
+    try {
+        const digest = (await fs.promises.readFile(digestFile)).toString();
+        core.info(digest);
+        core.setOutput('digest', digest);
+    }
+    catch (err) {
+        core.warning(`Failed to read digest file "${digestFile}": ${err}`);
+    }
 }
 
 async function execute(executable: string, args: string[], execOptions: exec.ExecOptions = {}): Promise<{ exitCode: number, stdout: string, stderr: string }> {
