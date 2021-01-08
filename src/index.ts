@@ -44,7 +44,10 @@ export async function run(): Promise<void> {
 
     const creds: string = `${username}:${password}`;
 
-    const digestFile = digestFileInput || `${imageToPush.replace(":", "_")}_digest.txt`;
+    let digestFile = digestFileInput;
+    if (!digestFile) {
+        digestFile = `${imageToPush.replace(/[/\\/?%*:|"<>]/g, "-")}_digest.txt`;
+    }
 
     const args = [ 'push',
         '--quiet',
