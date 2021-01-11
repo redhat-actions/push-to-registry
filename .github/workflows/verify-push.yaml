@@ -2,9 +2,9 @@
 # is some change in code done to ensure that the changes
 # are not buggy and we are getting the desired output.
 name: Test Push
-on: [ push, pull_request, workflow_dispatch ]
+on: [push, pull_request, workflow_dispatch]
 env:
-  IMAGE_NAME: hello-world
+  IMAGE_NAME: myimage
   IMAGE_REGISTRY: quay.io
   IMAGE_TAG: latest
 
@@ -17,9 +17,12 @@ jobs:
       - name: Checkout Push to Registry action
         uses: actions/checkout@v2
 
-      # Pull hello-world image to push in next step
-      - name: Pull Hello world image
-        run: docker pull ${{ env.IMAGE_NAME }}
+      - name: Build Image using Docker
+        run: |
+          docker build -t ${{ env.IMAGE_NAME }}:latest -<<EOF
+          FROM busybox
+          RUN echo "hello world"
+          EOF
 
       # Push the image to image registry
       - name: Push To Quay
@@ -31,7 +34,6 @@ jobs:
           registry: ${{ env.IMAGE_REGISTRY }}/${{ secrets.REGISTRY_USER }}
           username: ${{ secrets.REGISTRY_USER }}
           password: ${{ secrets.REGISTRY_PASSWORD }}
-
 
       - name: Echo outputs
         run: |
