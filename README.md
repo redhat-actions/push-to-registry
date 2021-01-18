@@ -128,7 +128,7 @@ If the image to push is present in the Docker image storage but not in the Podma
 
 If the image to push is present in both the Docker and Podman image storage, the action will push the image which was more recently built, and log a warning.
 
-If an image was pulled from the Docker image storage into the Podman storage, it will be cleaned up from the Podman storage before the action exits.
+If the action pulled an image from the Docker image storage into the Podman storage, it will be cleaned up from the Podman storage before the action exits.
 
 ## Troubleshooting
 Note that quay.io repositories are private by default.<br>

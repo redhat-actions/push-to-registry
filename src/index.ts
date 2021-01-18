@@ -193,8 +193,10 @@ async function isPodmanLocalImageLatest(
 
 // remove the pulled image from the Podman image storage
 async function removeDockerImage(): Promise<void> {
-    core.info(`Removing ${imageToPush} from the Podman image storage`);
-    await execute(await getPodmanPath(), [ "rmi", imageToPush ]);
+    if (!imageToPush) {
+        core.info(`Removing ${imageToPush} from the Podman image storage`);
+        await execute(await getPodmanPath(), [ "rmi", imageToPush ]);
+    }
 }
 
 async function execute(
