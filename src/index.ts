@@ -4,11 +4,24 @@ import * as io from "@actions/io";
 import * as fs from "fs";
 import * as path from "path";
 
-interface Response {
+interface ExecResult {
     exitCode: number;
     stdout: string;
     stderr: string;
 }
+
+let podmanPath: string | undefined;
+
+async function getPodmanPath(): Promise<string> {
+    if (podmanPath == null) {
+        podmanPath = await io.which("podman", true);
+    }
+
+    return podmanPath;
+}
+
+// base URL that gets appended if image is pulled from the Docker imaege storage
+const dockerBaseUrl = "docker.io/library";
 
 async function run(): Promise<void> {
     const imageInput = core.getInput("image", { required: true });
@@ -19,51 +32,43 @@ async function run(): Promise<void> {
     const tlsVerify = core.getInput("tls-verify");
     const digestFileInput = core.getInput("digestfile");
 
-    // get Podman cli
-    const podman = await io.which("podman", true);
-
     let imageToPush = `${imageInput}:${tag}`;
 
-    // check if image exist in Podman local registry
+    // check if image exist in Podman image storage
     const isPresentInPodman: boolean = await checkImageInPodman(
         imageToPush,
-        podman,
     );
 
-    // check if image exist in Docker local registry and if exist pull the image to Podman
+    // check if image exist in Docker image storage and if exist pull the image to Podman
     const isPresentInDocker: boolean = await pullImageFromDocker(
         imageToPush,
-        podman,
     );
 
-    // boolean value to check if pushed image is from Docker local registry
+    // failing if image is not found in Docker as well as Podman
+    if (!isPresentInDocker && !isPresentInPodman) {
+        throw new Error(`Image ${imageToPush} not found in Podman local storage, or Docker local storage.`);
+    }
+
+    // boolean value to check if pushed image is from Docker image storage
     let isPushingDockerImage = false;
 
     if (isPresentInPodman && isPresentInDocker) {
-        const warningMsg = "Image found in Podman as well as in Docker local registry.";
-
-        let isPodmanImageLatest = false;
-        try {
-            isPodmanImageLatest = await isPodmanLocalImageLatest(
-                imageToPush,
-                podman,
-            );
-        }
-        catch (err) {
-            core.setFailed(err);
-        }
+        const isPodmanImageLatest = await isPodmanLocalImageLatest(
+            imageToPush,
+        );
 
         if (!isPodmanImageLatest) {
-            core.warning(`${warningMsg} Using Docker local registry's image as that is built latest`);
-            imageToPush = `docker.io/library/${imageToPush}`;
+            core.warning(`The version of ${imageToPush} in the Docker image storage is more recent than the version in the Podman image storage. The image from the Docker image storage will be pushed.`);
+            imageToPush = `${dockerBaseUrl}/${imageToPush}`;
             isPushingDockerImage = true;
         }
         else {
-            core.warning(`${warningMsg} Using Podman local registry's image as that is built latest`);
+            core.warning(`The version of ${imageToPush} in the Podman image storage is more recent than the version in the Docker image storage. The image from the Podman image storage will be pushed.`);
         }
     }
     else if (isPresentInDocker) {
-        imageToPush = `docker.io/library/${imageToPush}`;
+        imageToPush = `${dockerBaseUrl}/${imageToPush}`;
+        core.info(`Image ${imageToPush} was found in the Docker image storage, but not in the Podman image storage. The image will be pulled into Podman image storage, pushed, and then removed from the Podman image storage.`);
         isPushingDockerImage = true;
     }
 
@@ -73,7 +78,8 @@ async function run(): Promise<void> {
     }
     core.info(pushMsg);
 
-    const registryPath = `${registry.replace(/\/$/, "")}/${imageInput}:${tag}`;
+    const registryWithoutTrailingSlash = registry.replace(/\/$/, "");
+    const registryPath = `${registryWithoutTrailingSlash}/${imageInput}:${tag}`;
 
     const creds = `${username}:${password}`;
 
@@ -85,7 +91,7 @@ async function run(): Promise<void> {
         )}_digest.txt`;
     }
 
-    // push image
+    // push the image
     const args = [
         "push",
         "--quiet",
@@ -102,15 +108,15 @@ async function run(): Promise<void> {
         args.push(`--tls-verify=${tlsVerify}`);
     }
 
-    await execute(podman, args);
+    await execute(await getPodmanPath(), args);
 
     core.info(`Successfully pushed ${imageToPush} to ${registryPath}.`);
     core.setOutput("registry-path", registryPath);
 
-    // remove the pulled image from the Podman local registry
+    // remove the pulled image from the Podman image storage
     if (isPushingDockerImage) {
-        core.info(`Removing ${imageToPush} from the Podman local registry`);
-        await execute(podman, [ "rmi", imageToPush ]);
+        core.info(`Removing ${imageToPush} from the Podman image storage`);
+        await execute(await getPodmanPath(), [ "rmi", imageToPush ]);
     }
 
     try {
@@ -125,43 +131,40 @@ async function run(): Promise<void> {
 
 async function pullImageFromDocker(
     imageName: string,
-    podman: string,
 ): Promise<boolean> {
     try {
-        await execute(podman, [ "pull", `docker-daemon:${imageName}` ]);
-        core.info("Image found and sucessfully pulled from Docker local registry");
+        await execute(await getPodmanPath(), [ "pull", `docker-daemon:${imageName}` ]);
+        core.info(`Image ${imageName} found in Docker image storage`);
         return true;
     }
     catch (err) {
-        core.info("Image not found in Docker local registry");
+        core.info(`Image ${imageName} not found in Docker image storage`);
         return false;
     }
 }
 
 async function checkImageInPodman(
     imageName: string,
-    podman: string,
 ): Promise<boolean> {
-    // check if images exist in Podman's local registry
-    core.info("Checking image in Podman local registry");
+    // check if images exist in Podman's storage
+    core.info("Checking image in Podman image storage");
     try {
-        await execute(podman, [ "image", "exists", imageName ]);
-        core.info("Image found in Podman local registry");
+        await execute(await getPodmanPath(), [ "image", "exists", imageName ]);
+        core.info(`Image ${imageName} found in Podman image storage`);
+        return true;
     }
     catch (err) {
-        core.info("Image not found in Podman local registry");
+        core.info(`Image ${imageName} not found in Podman image storage`);
         core.debug(err);
         return false;
     }
-    return true;
 }
 
 async function isPodmanLocalImageLatest(
     imageName: string,
-    podman: string,
 ): Promise<boolean> {
-    // get creation time of the image present in the Podman local registry
-    const podmanLocalImageTimeStamp = await execute(podman, [
+    // get creation time of the image present in the Podman image storage
+    const podmanLocalImageTimeStamp = await execute(await getPodmanPath(), [
         "image",
         "inspect",
         imageName,
@@ -169,16 +172,20 @@ async function isPodmanLocalImageLatest(
         "{{.Created}}",
     ]);
 
-    // get creation time of the image pulled from the Docker local registry
+    core.info(`The image from Podman image storage was last modified at ${podmanLocalImageTimeStamp.stdout}`);
+
+    // get creation time of the image pulled from the Docker image storage
     // appending 'docker.io/library' infront of image name as pulled image name
-    // from Docker local registry starts with the 'docker.io/library'
-    const pulledImageCreationTimeStamp = await execute(podman, [
+    // from Docker image storage starts with the 'docker.io/library'
+    const pulledImageCreationTimeStamp = await execute(await getPodmanPath(), [
         "image",
         "inspect",
-        `docker.io/library/${imageName}`,
+        `${dockerBaseUrl}/${imageName}`,
         "--format",
         "{{.Created}}",
     ]);
+
+    core.info(`The image from Docker image storage was last modified at ${pulledImageCreationTimeStamp.stdout}`);
 
     const podmanImageTime = new Date(podmanLocalImageTimeStamp.stdout).getTime();
 
@@ -191,7 +198,7 @@ async function execute(
     executable: string,
     args: string[],
     execOptions: exec.ExecOptions = {},
-): Promise<Response> {
+): Promise<ExecResult> {
     let stdout = "";
     let stderr = "";
 
@@ -199,10 +206,10 @@ async function execute(
     finalExecOptions.ignoreReturnCode = true; // the return code is processed below
 
     finalExecOptions.listeners = {
-        stdline: (line) => {
+        stdline: (line): void => {
             stdout += `${line}\n`;
         },
-        errline: (line) => {
+        errline: (line): void => {
             stderr += `${line}\n`;
         },
     };

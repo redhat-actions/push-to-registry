@@ -1,6 +1,6 @@
 // eslint-disable-next-line no-undef
 module.exports = {
     extends: [
-        "@tetchel/eslint-config-actions",
+        "@redhat-actions/eslint-config",
     ],
 };
