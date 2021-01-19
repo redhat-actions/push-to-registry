@@ -120,6 +120,16 @@ jobs:
       run: echo "New image has been pushed to ${{ steps.push-to-quay.outputs.registry-path }}"
 ```
 
+## Note about images built with Docker
+
+This action uses `Podman` to push, but can also push images built with `Docker`. However, Docker and Podman store their images in different locations, and Podman can only push images in its own storage.
+
+If the image to push is present in the Docker image storage but not in the Podman image storage, it will be pulled into Podman's storage.
+
+If the image to push is present in both the Docker and Podman image storage, the action will push the image which was more recently built, and log a warning.
+
+If the action pulled an image from the Docker image storage into the Podman storage, it will be cleaned up from the Podman storage before the action exits.
+
 ## Troubleshooting
 Note that quay.io repositories are private by default.<br>
 

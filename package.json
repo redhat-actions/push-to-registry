@@ -7,6 +7,7 @@
     "compile": "tsc -p .",
     "bundle": "ncc build src/index.ts --source-map --minify",
     "clean": "rm -rf out/ dist/",
+    "lint": "eslint . --max-warnings=0",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Red Hat",
@@ -17,8 +18,13 @@
     "@actions/io": "^1.0.2"
   },
   "devDependencies": {
+    "@redhat-actions/eslint-config": "^1.2.0",
+    "@redhat-actions/tsconfig": "^1.1.0",
     "@types/node": "^12.12.7",
+    "@typescript-eslint/eslint-plugin": "^4.14.0",
+    "@typescript-eslint/parser": "^4.14.0",
     "@vercel/ncc": "^0.25.1",
+    "eslint": "^7.18.0",
     "typescript": "^4.0.5"
   }
 }
