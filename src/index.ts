@@ -46,7 +46,7 @@ async function run(): Promise<void> {
 
     // failing if image is not found in Docker as well as Podman
     if (!isPresentInDocker && !isPresentInPodman) {
-        throw new Error(`Image ${imageToPush} not found in Podman local storage, or Docker local storage.`);
+        throw new Error(`${imageToPush} not found in Podman local storage, or Docker local storage.`);
     }
 
     if (isPresentInPodman && isPresentInDocker) {
@@ -66,7 +66,7 @@ async function run(): Promise<void> {
     }
     else if (isPresentInDocker) {
         imageToPush = `${dockerBaseUrl}/${imageToPush}`;
-        core.info(`Image ${imageToPush} was found in the Docker image storage, but not in the Podman `
+        core.info(`${imageToPush} was found in the Docker image storage, but not in the Podman `
             + `image storage. The image will be pulled into Podman image storage, pushed, and then `
             + `removed from the Podman image storage.`);
         isImageFromDocker = true;
@@ -140,11 +140,11 @@ async function checkImageInPodman(): Promise<boolean> {
     core.info(`Checking if ${imageToPush} is in Podman image storage`);
     try {
         await execute(await getPodmanPath(), [ "image", "exists", imageToPush ]);
-        core.info(`Image ${imageToPush} found in Podman image storage`);
+        core.info(`${imageToPush} found in Podman image storage`);
         return true;
     }
     catch (err) {
-        core.info(`Image ${imageToPush} not found in Podman image storage`);
+        core.info(`${imageToPush} not found in Podman image storage`);
         core.debug(err);
         return false;
     }

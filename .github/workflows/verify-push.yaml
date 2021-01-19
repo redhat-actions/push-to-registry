@@ -17,12 +17,12 @@ jobs:
       - name: Checkout Push to Registry action
         uses: actions/checkout@v2
 
-      # - name: Build Image using Docker
-      #   run: |
-      #     docker build -t ${{ env.IMAGE_NAME }}:latest -<<EOF
-      #     FROM busybox
-      #     RUN echo "hello world"
-      #     EOF
+      - name: Build Image using Docker
+        run: |
+          docker build -t ${{ env.IMAGE_NAME }}:latest -<<EOF
+          FROM busybox
+          RUN echo "hello world"
+          EOF
 
       # Push the image to image registry
       - name: Push To Quay
