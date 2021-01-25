@@ -8,8 +8,8 @@ inputs:
   image:
     description: 'Name of the image to push'
     required: true
-  tag:
-    description: 'Tag of the image to push'
+  tags:
+    description: 'The tags of the image to push. For multiple tags, seperate by a space. For example, "v1 v0.1".'
     required: false
     default: 'latest'
   registry:
@@ -25,10 +25,18 @@ inputs:
     description: 'Verify TLS certificates when contacting the registry'
     required: false
     default: 'true'
+  digestfile:
+    description: | 
+      After copying the image, write the digest of the resulting image to the file.
+      By default, the filename will be determined from the image and tag.
+      The contents of this file are the digest output.
+    required: false
   
 outputs:
-  registry-path:
-    description: 'The registry path to which the image was pushed'
+  digest:
+    description: 'The pushed image digest, as written to the `digestfile`'
+  registry-paths:
+    description: 'List of registry paths to which the tag(s) were pushed'
 runs:
   using: 'node12'
   main: 'dist/index.js'

@@ -73,11 +73,12 @@ Refer to the [`podman push`](http://docs.podman.io/en/latest/markdown/podman-man
 
 ## Action Outputs
 
-`registry-path`: The registry path to which the image was pushed.<br>
-For example, `quay.io/username/spring-image:v1`.
+`registry-paths`: The List of registry paths to which the tag(s) were pushed.<br>
+For example, `quay.io/username/spring-image:v1,quay.io/username/spring-image:v2`.
 
 `digest`: The pushed image digest, as written to the `digestfile`.<br>
 For example, `sha256:66ce924069ec4181725d15aa27f34afbaf082f434f448dc07a42daa3305cdab3`.
+For multiple tags, digest remains same.
 
 ## Examples
 
