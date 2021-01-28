@@ -6,7 +6,7 @@ on: [ push, workflow_dispatch ]
 env:
   IMAGE_NAME: myimage
   IMAGE_REGISTRY: quay.io
-  IMAGE_TAG: latest
+  IMAGE_TAGS: v1 ${{ github.sha }}
 
 jobs:
   build:
@@ -23,9 +23,7 @@ jobs:
           FROM busybox
           RUN echo "hello world"
           EOF
-          docker tag ${{ env.IMAGE_NAME }}:v1 ${{ env.IMAGE_NAME }}:v2
-          docker tag ${{ env.IMAGE_NAME }}:v1 ${{ env.IMAGE_NAME }}:v3
-
+          docker tag ${{ env.IMAGE_NAME }}:v1 ${{ env.IMAGE_NAME }}:${{ github.sha }}
 
       # Push the image to image registry
       - name: Push To Quay
@@ -33,7 +31,7 @@ jobs:
         id: push
         with:
           image: ${{ env.IMAGE_NAME }}
-          tags: v1 v2 v3
+          tags: ${{ env.IMAGE_TAGS }}
           registry: ${{ env.IMAGE_REGISTRY }}/${{ secrets.REGISTRY_USER }}
           username: ${{ secrets.REGISTRY_USER }}
           password: ${{ secrets.REGISTRY_PASSWORD }}

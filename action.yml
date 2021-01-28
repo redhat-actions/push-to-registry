@@ -9,7 +9,7 @@ inputs:
     description: 'Name of the image to push'
     required: true
   tags:
-    description: 'The tags of the image to push. For multiple tags, seperate by a space. For example, "v1 v0.1".'
+    description: 'The tag or tags of the image to push. For multiple tags, seperate by a space. For example, "latest v1"'
     required: false
     default: 'latest'
   registry:
@@ -34,9 +34,9 @@ inputs:
   
 outputs:
   digest:
-    description: 'The pushed image digest, as written to the `digestfile`'
+    description: 'The pushed image digest, as written to the "digestfile"'
   registry-paths:
-    description: 'List of registry paths to which the tag(s) were pushed'
+    description: 'A JSON array of registry paths to which the tag(s) were pushed'
 runs:
   using: 'node12'
   main: 'dist/index.js'

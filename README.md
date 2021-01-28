@@ -31,10 +31,10 @@ Refer to the [`podman push`](http://docs.podman.io/en/latest/markdown/podman-man
   </tr>
 
   <tr>
-    <td>tag</td>
+    <td>tags</td>
     <td>No</td>
     <td>
-      Image tag to push.<br>
+      The tag or tags of the image to push. For multiple tags, seperate by a space. For example, <code>latest {{ github.sha }}</code><br>
       Defaults to <code>latest</code>.
     </td>
   </tr>
@@ -73,12 +73,12 @@ Refer to the [`podman push`](http://docs.podman.io/en/latest/markdown/podman-man
 
 ## Action Outputs
 
-`registry-paths`: The List of registry paths to which the tag(s) were pushed.<br>
-For example, `quay.io/username/spring-image:v1,quay.io/username/spring-image:v2`.
+`registry-paths`: A JSON array of registry paths to which the tag(s) were pushed.<br>
+For example, `[ quay.io/username/spring-image:v1,quay.io/username/spring-image:latest ]`.
 
 `digest`: The pushed image digest, as written to the `digestfile`.<br>
 For example, `sha256:66ce924069ec4181725d15aa27f34afbaf082f434f448dc07a42daa3305cdab3`.
-For multiple tags, digest remains same.
+For multiple tags, the digest remains same.
 
 ## Examples
 
@@ -94,16 +94,18 @@ jobs:
     runs-on: ubuntu-latest
     env:
       IMAGE_NAME: my-app
-      IMAGE_TAG: latest
+      IMAGE_TAGS: latest v1
 
     steps:
     - uses: actions/checkout@v2
 
     - name: Build Image
+      id: build-image
       uses: redhat-actions/buildah-build@v1
       with:
         image: ${{ env.IMAGE_NAME }}
-        tag: ${{ env.TAG }}
+        tags: ${{ env.IMAGE_TAGS }}
+        base-image: some_image
         dockerfiles: |
           ./Dockerfile
 
@@ -111,8 +113,8 @@ jobs:
       id: push-to-quay
       uses: redhat-actions/push-to-registry@v1
       with:
-        image: ${{ env.IMAGE_NAME }}
-        tag: ${{ env.TAG }}
+        image: ${{ steps.build-image.outputs.image }}
+        tags: ${{ steps.build-image.outputs.tags }}
         registry: ${{ secrets.QUAY_REPO }}
         username: ${{ secrets.QUAY_USERNAME }}
         password: ${{ secrets.QUAY_TOKEN }}
