@@ -43,6 +43,7 @@ async function run(): Promise<void> {
     const password = core.getInput("password", { required: true });
     const tlsVerify = core.getInput("tls-verify");
     const digestFileInput = core.getInput("digestfile");
+    const extraArgs = core.getInput("extra-args");
 
     imageToPush = `${imageInput}`;
     const registryPathList: string[] = [];
@@ -158,6 +159,10 @@ async function run(): Promise<void> {
             imageWithTag,
             registryPath,
         ];
+
+        if (extraArgs) {
+            args.push(extraArgs);
+        }
 
         // check if tls-verify is not set to null
         if (tlsVerify) {

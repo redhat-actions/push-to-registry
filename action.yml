@@ -31,6 +31,9 @@ inputs:
       By default, the filename will be determined from the image and tag.
       The contents of this file are the digest output.
     required: false
+  extra-args:
+    description: 'Extra args to be passed to push command when pushing image'
+    required: false
   
 outputs:
   digest:
