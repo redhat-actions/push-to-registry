@@ -23,7 +23,14 @@ jobs:
           FROM busybox
           RUN echo "hello world"
           EOF
-          docker tag ${{ env.IMAGE_NAME }}:v1 ${{ env.IMAGE_NAME }}:${{ github.sha }}
+
+      - name: Build Image using Podman
+        run: |
+          podman build -t ${{ env.IMAGE_NAME }}:v1 -<<EOF
+          FROM busybox
+          RUN echo "hello world"
+          EOF
+          podman tag ${{ env.IMAGE_NAME }}:v1 ${{ env.IMAGE_NAME }}:${{ github.sha }}
 
       # Push the image to image registry
       - name: Push To Quay
