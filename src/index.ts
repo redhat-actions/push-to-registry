@@ -57,7 +57,8 @@ async function run(): Promise<void> {
         core.info(`Tag(s) ${podmanFoundTags.join(", ")} of ${imageToPush} found in Podman image storage`);
     }
 
-    if (podmanMissingTags.length > 0) {
+    // Log warning if few tags are found
+    if (podmanMissingTags.length > 0 && podmanFoundTags.length > 0) {
         core.warning(`Tag(s) ${podmanMissingTags.join(", ")} of ${imageToPush} not found in Podman image storage`);
     }
 
@@ -72,14 +73,16 @@ async function run(): Promise<void> {
         core.info(`Tag(s) ${dockerFoundTags.join(", ")} of ${imageToPush} found in Docker image storage`);
     }
 
-    if (dockerMissingTags.length > 0) {
+    // Log warning if few tags are found
+    if (dockerMissingTags.length > 0 && dockerFoundTags.length > 0) {
         core.warning(`Tag(s) ${dockerMissingTags.join(", ")} of ${imageToPush} not found in Docker image storage`);
     }
 
     // failing if image with any of the tag is not found in Docker as well as Podman
     if (podmanMissingTags.length > 0 && dockerMissingTags.length > 0) {
         throw new Error(
-            `Few tags of ${imageToPush} not found in Podman image storage, or Docker image storage.`
+            `Tag(s) ${podmanMissingTags.join(", ")} of ${imageToPush} not found in Podman image storage `
+            + `and Tag(s) ${dockerMissingTags.join(", ")} of ${imageToPush} not found in Docker image storage.`
         );
     }
 
