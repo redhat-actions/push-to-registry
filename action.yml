@@ -32,7 +32,9 @@ inputs:
       The contents of this file are the digest output.
     required: false
   extra-args:
-    description: 'Extra args to be passed to push command when pushing image'
+    description: | 
+      Extra args to be passed to podman push.
+      Separate arguments by newline. Do not use quotes - @actions/exec will do the quoting for you.
     required: false
   
 outputs:

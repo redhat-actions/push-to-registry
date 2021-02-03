@@ -74,7 +74,8 @@ Refer to the [`podman push`](http://docs.podman.io/en/latest/markdown/podman-man
   <tr>
     <td>extra-args</td>
     <td>No</td>
-    <td>Extra args to be passed to push command when pushing image.</td>
+    <td>Extra args to be passed to podman push.
+      Separate arguments by newline. Do not use quotes.</td>
   </tr>
 
 </table>
