@@ -1,0 +1,140 @@
+name: Multiple container CLI build tests
+on:
+  push:
+  pull_request_target:
+  workflow_dispatch:
+env:
+  IMAGE_NAME: myimage
+  IMAGE_TAG: v1
+  IMAGE_REGISTRY: quay.io
+
+jobs:
+  build-only-podman:
+    name: Build and push image built only on Podman
+    runs-on: ubuntu-20.04
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Build image using Podman
+        run: |
+            podman build -t ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }} -<<EOF
+            FROM busybox
+            RUN echo "hello world"
+            EOF
+
+      - name: Push image to ${{ env.IMAGE_REGISTRY }}
+        id: push
+        uses: ./
+        with:
+          image: ${{ env.IMAGE_NAME }}
+          tags: ${{ env.IMAGE_TAG }}
+          registry: ${{ env.IMAGE_REGISTRY }}/${{ secrets.REGISTRY_USER }}
+          username: ${{ secrets.REGISTRY_USER }}
+          password: ${{ secrets.REGISTRY_PASSWORD }}
+    
+      - name: Echo outputs
+        run: |
+          echo "Digest: ${{ steps.push.outputs.digest }}"
+          echo "Registry Paths: ${{ steps.push.outputs.registry-paths }}"
+  
+  build-only-docker:
+    name: Build and push image built only on Docker
+    runs-on: ubuntu-20.04
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Build image using Docker
+        run: |
+            docker build -t ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }} -<<EOF
+            FROM busybox
+            RUN echo "hello world"
+            EOF
+
+      - name: Push image to ${{ env.IMAGE_REGISTRY }}
+        id: push
+        uses: ./
+        with:
+          image: ${{ env.IMAGE_NAME }}
+          tags: ${{ env.IMAGE_TAG }}
+          registry: ${{ env.IMAGE_REGISTRY }}/${{ secrets.REGISTRY_USER }}
+          username: ${{ secrets.REGISTRY_USER }}
+          password: ${{ secrets.REGISTRY_PASSWORD }}
+    
+      - name: Echo outputs
+        run: |
+          echo "Digest: ${{ steps.push.outputs.digest }}"
+          echo "Registry Paths: ${{ steps.push.outputs.registry-paths }}"
+  
+  build-podman-latest:
+    name: Build and push image built latest on Podman
+    runs-on: ubuntu-20.04
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Build image using Docker
+        run: |
+            docker build -t ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }} -<<EOF
+            FROM busybox
+            RUN echo "hello world"
+            EOF
+      
+      - name: Build image using Podman
+        run: |
+            podman build -t ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }} -<<EOF
+            FROM busybox
+            RUN echo "hello world"
+            EOF
+
+      - name: Push image to ${{ env.IMAGE_REGISTRY }} 
+        id: push
+        uses: ./
+        with:
+          image: ${{ env.IMAGE_NAME }}
+          tags: ${{ env.IMAGE_TAG }}
+          registry: ${{ env.IMAGE_REGISTRY }}/${{ secrets.REGISTRY_USER }}
+          username: ${{ secrets.REGISTRY_USER }}
+          password: ${{ secrets.REGISTRY_PASSWORD }}
+    
+      - name: Echo outputs
+        run: |
+          echo "Digest: ${{ steps.push.outputs.digest }}"
+          echo "Registry Paths: ${{ steps.push.outputs.registry-paths }}"
+
+  build-docker-latest:
+    name: Build and push image built latest on Docker
+    runs-on: ubuntu-20.04
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Build image using Podman
+        run: |
+            podman build -t ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }} -<<EOF
+            FROM busybox
+            RUN echo "hello world"
+            EOF
+
+      - name: Build image using Docker
+        run: |
+            docker build -t ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }} -<<EOF
+            FROM busybox
+            RUN echo "hello world"
+            EOF
+
+      - name: Push image to ${{ env.IMAGE_REGISTRY }} 
+        id: push
+        uses: ./
+        with:
+          image: ${{ env.IMAGE_NAME }}
+          tags: ${{ env.IMAGE_TAG }}
+          registry: ${{ env.IMAGE_REGISTRY }}/${{ secrets.REGISTRY_USER }}
+          username: ${{ secrets.REGISTRY_USER }}
+          password: ${{ secrets.REGISTRY_PASSWORD }}
+    
+      - name: Echo outputs
+        run: |
+          echo "Digest: ${{ steps.push.outputs.digest }}"
+          echo "Registry Paths: ${{ steps.push.outputs.registry-paths }}"
