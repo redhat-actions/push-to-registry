@@ -67,7 +67,7 @@ jobs:
       # Build image using Buildah action
       - name: Build Image
         id: build_image
-        uses: redhat-actions/buildah-build@main
+        uses: redhat-actions/buildah-build@v2
         with:
           image: ${{ env.IMAGE_NAME }}
           tags: ${{ env.IMAGE_TAGS }}

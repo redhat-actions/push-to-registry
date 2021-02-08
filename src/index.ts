@@ -4,6 +4,7 @@ import * as io from "@actions/io";
 import * as fs from "fs";
 import * as path from "path";
 import { splitByNewline } from "./util";
+import { Inputs, Outputs } from "./generated/inputs-outputs";
 
 interface ExecResult {
     exitCode: number;
@@ -35,15 +36,15 @@ async function getPodmanPath(): Promise<string> {
 const dockerBaseUrl = "docker.io/library";
 
 async function run(): Promise<void> {
-    const imageInput = core.getInput("image", { required: true });
-    const tags = core.getInput("tags") || "latest";
+    const imageInput = core.getInput(Inputs.IMAGE, { required: true });
+    const tags = core.getInput(Inputs.TAGS) || "latest";
     // split tags
     tagsList = tags.split(" ");
-    const registry = core.getInput("registry", { required: true });
-    const username = core.getInput("username", { required: true });
-    const password = core.getInput("password", { required: true });
-    const tlsVerify = core.getInput("tls-verify");
-    const digestFileInput = core.getInput("digestfile");
+    const registry = core.getInput(Inputs.REGISTRY, { required: true });
+    const username = core.getInput(Inputs.USERNAME, { required: true });
+    const password = core.getInput(Inputs.PASSWORD, { required: true });
+    const tlsVerify = core.getInput(Inputs.TLS_VERIFY);
+    const digestFileInput = core.getInput(Inputs.DIGESTFILE);
 
     const inputExtraArgsStr = core.getInput("extra-args");
     let podmanExtraArgs: string[] = [];
@@ -187,13 +188,13 @@ async function run(): Promise<void> {
     try {
         const digest = (await fs.promises.readFile(digestFile)).toString();
         core.info(digest);
-        core.setOutput("digest", digest);
+        core.setOutput(Outputs.DIGEST, digest);
     }
     catch (err) {
         core.warning(`Failed to read digest file "${digestFile}": ${err}`);
     }
 
-    core.setOutput("registry-paths", JSON.stringify(registryPathList));
+    core.setOutput(Outputs.REGISTRY_PATHS, JSON.stringify(registryPathList));
 }
 
 async function pullImageFromDocker(): Promise<ImageStorageCheckResult> {
