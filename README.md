@@ -132,7 +132,7 @@ jobs:
         password: ${{ secrets.QUAY_TOKEN }}
 
     - name: Use the image
-      run: echo "New image has been pushed to ${{ steps.push-to-quay.outputs.registry-path }}"
+      run: echo "New image has been pushed to ${{ steps.push-to-quay.outputs.registry-paths }}"
 ```
 
 ## Note about images built with Docker
