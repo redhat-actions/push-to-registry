@@ -92,6 +92,8 @@ jobs:
           registry: ${{ env.IMAGE_REGISTRY }}/${{ secrets.REGISTRY_USER }}
           username: ${{ secrets.REGISTRY_USER }}
           password: ${{ secrets.REGISTRY_PASSWORD }}
+          extra-args: |
+            --disable-content-trust
       
       - name: Echo outputs
         run: |

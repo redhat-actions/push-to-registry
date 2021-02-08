@@ -3,6 +3,7 @@ import * as exec from "@actions/exec";
 import * as io from "@actions/io";
 import * as fs from "fs";
 import * as path from "path";
+import { splitByNewline } from "./util";
 
 interface ExecResult {
     exitCode: number;
@@ -43,6 +44,15 @@ async function run(): Promise<void> {
     const password = core.getInput("password", { required: true });
     const tlsVerify = core.getInput("tls-verify");
     const digestFileInput = core.getInput("digestfile");
+
+    const inputExtraArgsStr = core.getInput("extra-args");
+    let podmanExtraArgs: string[] = [];
+    if (inputExtraArgsStr) {
+        // transform the array of lines into an array of arguments
+        // by splitting over lines, then over spaces, then trimming.
+        const lines = splitByNewline(inputExtraArgsStr);
+        podmanExtraArgs = lines.flatMap((line) => line.split(" ")).map((arg) => arg.trim());
+    }
 
     imageToPush = `${imageInput}`;
     const registryPathList: string[] = [];
@@ -158,6 +168,10 @@ async function run(): Promise<void> {
             imageWithTag,
             registryPath,
         ];
+
+        if (podmanExtraArgs.length > 0) {
+            args.push(...podmanExtraArgs);
+        }
 
         // check if tls-verify is not set to null
         if (tlsVerify) {

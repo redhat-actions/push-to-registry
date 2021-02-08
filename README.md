@@ -68,7 +68,16 @@ Refer to the [`podman push`](http://docs.podman.io/en/latest/markdown/podman-man
     <td>digestfile</td>
     <td>No</td>
     <td>After copying the image, write the digest of the resulting image to the file. By default, the filename will be determined from the image and tag.
-    The contents of this file are the <code>digest</code> output.
+    The contents of this file are the <code>digest</code> output.</td>
+  </tr>
+
+  <tr>
+    <td>extra-args</td>
+    <td>No</td>
+    <td>Extra args to be passed to podman push.
+      Separate arguments by newline. Do not use quotes.</td>
+  </tr>
+
 </table>
 
 ## Action Outputs

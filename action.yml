@@ -31,6 +31,11 @@ inputs:
       By default, the filename will be determined from the image and tag.
       The contents of this file are the digest output.
     required: false
+  extra-args:
+    description: | 
+      Extra args to be passed to podman push.
+      Separate arguments by newline. Do not use quotes - @actions/exec will do the quoting for you.
+    required: false
   
 outputs:
   digest:
