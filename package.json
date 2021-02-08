@@ -18,6 +18,7 @@
     "@actions/io": "^1.0.2"
   },
   "devDependencies": {
+    "@redhat-actions/action-io-generator": "^1.5.0",
     "@redhat-actions/eslint-config": "^1.2.11",
     "@redhat-actions/tsconfig": "^1.1.0",
     "@types/node": "^12.12.7",
