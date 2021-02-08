@@ -9,6 +9,13 @@ export enum Inputs {
      */
     DIGESTFILE = "digestfile",
     /**
+     * Extra args to be passed to podman push.
+     * Separate arguments by newline. Do not use quotes - @actions/exec will do the quoting for you.
+     * Required: false
+     * Default: None.
+     */
+    EXTRA_ARGS = "extra-args",
+    /**
      * Name of the image to push
      * Required: true
      * Default: None.
