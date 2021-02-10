@@ -1,10 +1,10 @@
 # push-to-registry Changelog
 
 ## v2
-- Rename `tag` input to `tags`, and allow you to push multiple tags of the same image
-- Add input parameter `extra_args` to append extra args to the podman push
-- Rename `registry-path` output parameter to `registry-paths`, and allow you to output multiple image registry paths of the pushed image
-- (Internal) Add test workflows to test build and push using multiple container CLI (Podman and Docker)
+- Rename `tag` input to `tags`, to allow you to push multiple tags of the same image
+- Add input `extra_args` to append arbitrary arguments to the `podman push`
+- Rename `registry-path` output to `registry-paths`, which is a JSON-parseable array containing all registry paths of the pushed image. The size of the output array is the number of `tags` that were pushed.
+- (Internal) Add test workflows to test build and push using multiple container CLIs (Podman and Docker)
 - (Internal) Add CI checks to the action that includes ESlint, bundle verifier and IO checker
 
 ## v1.2
