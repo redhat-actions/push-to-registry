@@ -113,7 +113,7 @@ jobs:
 
     - name: Build Image
       id: build-image
-      uses: redhat-actions/buildah-build@v1
+      uses: redhat-actions/buildah-build@v2
       with:
         image: ${{ env.IMAGE_NAME }}
         tags: ${{ env.IMAGE_TAGS }}
@@ -123,7 +123,7 @@ jobs:
 
     - name: Push To Quay
       id: push-to-quay
-      uses: redhat-actions/push-to-registry@v1
+      uses: redhat-actions/push-to-registry@v2
       with:
         image: ${{ steps.build-image.outputs.image }}
         tags: ${{ steps.build-image.outputs.tags }}
