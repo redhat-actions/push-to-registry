@@ -183,15 +183,17 @@ async function run(): Promise<void> {
         core.info(`Successfully pushed ${imageWithTag} to ${registryPath}`);
 
         registryPathList.push(registryPath);
-    }
 
-    try {
-        const digest = (await fs.promises.readFile(digestFile)).toString();
-        core.info(digest);
-        core.setOutput(Outputs.DIGEST, digest);
-    }
-    catch (err) {
-        core.warning(`Failed to read digest file "${digestFile}": ${err}`);
+        try {
+            const digest = (await fs.promises.readFile(digestFile)).toString();
+            core.info(digest);
+            // the digest should be the same for every image, but we log it every time
+            // due to https://github.com/redhat-actions/push-to-registry/issues/26
+            core.setOutput(Outputs.DIGEST, digest);
+        }
+        catch (err) {
+            core.warning(`Failed to read digest file "${digestFile}": ${err}`);
+        }
     }
 
     core.setOutput(Outputs.REGISTRY_PATHS, JSON.stringify(registryPathList));
