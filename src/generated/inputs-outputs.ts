@@ -61,6 +61,12 @@ export enum Outputs {
      */
     DIGEST = "digest",
     /**
+     * The first element of registry-paths.
+     * Required: false
+     * Default: None.
+     */
+    REGISTRY_PATH = "registry-path",
+    /**
      * A JSON array of registry paths to which the tag(s) were pushed
      * Required: false
      * Default: None.

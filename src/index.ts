@@ -197,6 +197,7 @@ async function run(): Promise<void> {
         }
     }
 
+    core.setOutput(Outputs.REGISTRY_PATH, registryPathList[0]);
     core.setOutput(Outputs.REGISTRY_PATHS, JSON.stringify(registryPathList));
 }
 
