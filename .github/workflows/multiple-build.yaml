@@ -34,8 +34,7 @@ jobs:
 
       - name: Echo outputs
         run: |
-          echo "Digest: ${{ steps.push.outputs.digest }}"
-          echo "Registry Paths: ${{ steps.push.outputs.registry-paths }}"
+          echo "${{ toJSON(steps.push.outputs) }}"
 
   build-only-docker:
     name: Build and push image built only on Docker
@@ -63,8 +62,7 @@ jobs:
 
       - name: Echo outputs
         run: |
-          echo "Digest: ${{ steps.push.outputs.digest }}"
-          echo "Registry Paths: ${{ steps.push.outputs.registry-paths }}"
+          echo "${{ toJSON(steps.push.outputs) }}"
 
   build-podman-latest:
     name: Build and push image built latest on Podman
@@ -99,8 +97,7 @@ jobs:
 
       - name: Echo outputs
         run: |
-          echo "Digest: ${{ steps.push.outputs.digest }}"
-          echo "Registry Paths: ${{ steps.push.outputs.registry-paths }}"
+          echo "${{ toJSON(steps.push.outputs) }}"
 
   build-docker-latest:
     name: Build and push image built latest on Docker
@@ -135,5 +132,4 @@ jobs:
 
       - name: Echo outputs
         run: |
-          echo "Digest: ${{ steps.push.outputs.digest }}"
-          echo "Registry Paths: ${{ steps.push.outputs.registry-paths }}"
+          echo "${{ toJSON(steps.push.outputs) }}"
