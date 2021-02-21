@@ -100,5 +100,4 @@ jobs:
 
       - name: Echo outputs
         run: |
-          echo "Digest: ${{ steps.push.outputs.digest }}"
-          echo "Registry Paths: ${{ steps.push.outputs.registry-paths }}"
+          echo "${{ toJSON(steps.push.outputs) }}"
