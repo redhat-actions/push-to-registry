@@ -101,12 +101,12 @@ The example below shows how the `push-to-registry` action can be used to push an
 
 ```yaml
 name: Build and Push Image
-on: [push]
+on: [ push ]
 
 jobs:
   build:
     name: Build and push image
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     env:
       IMAGE_NAME: my-app
       IMAGE_TAGS: latest v1
@@ -147,6 +147,11 @@ If the image to push is present in the Docker image storage but not in the Podma
 If the image to push is present in both the Docker and Podman image storage, the action will push the image which was more recently built, and log a warning.
 
 If the action pulled an image from the Docker image storage into the Podman storage, it will be cleaned up from the Podman storage before the action exits.
+
+## Note about GitHub runners and Podman
+We recommend using `runs-on: ubuntu-20.04` since it has a newer version of Podman.
+
+If you are on `ubuntu-18.04` (which is currently aliased to [`ubuntu-latest`](https://github.com/actions/virtual-environments/issues/1816)) your workflow will use an older version of Podman and may encounter issues such as [#26](https://github.com/redhat-actions/push-to-registry/issues/26).
 
 ## Troubleshooting
 Note that quay.io repositories are private by default.<br>
