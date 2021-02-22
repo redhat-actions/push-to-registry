@@ -1,5 +1,11 @@
 # push-to-registry Changelog
 
+## v2.1
+- Add output `registy-path` to output first element of `registry-paths`
+- Print image digest after every push to verify image digest for each tag
+- Print `podman version` at start of the action to verify that required version is being used
+- (Internal) Add `Link checker` workflow to identify dangling links
+
 ## v2
 - Rename `tag` input to `tags`, to allow you to push multiple tags of the same image
 - Add input `extra_args` to append arbitrary arguments to the `podman push`
