@@ -37,10 +37,17 @@ async function getPodmanPath(): Promise<string> {
 const dockerBaseUrl = "docker.io/library";
 
 async function run(): Promise<void> {
+    const DEFAULT_TAG = "latest";
     const imageInput = core.getInput(Inputs.IMAGE, { required: true });
-    const tags = core.getInput(Inputs.TAGS) || "latest";
+    const tags = core.getInput(Inputs.TAGS);
     // split tags
     tagsList = tags.split(" ");
+
+    // info message if user doesn't provides any tag
+    if (!tagsList.length) {
+        core.info(`Input "${Inputs.TAGS}" is not provided, using default tag "${DEFAULT_TAG}"`);
+        tagsList.push(DEFAULT_TAG);
+    }
     const registry = core.getInput(Inputs.REGISTRY, { required: true });
     const username = core.getInput(Inputs.USERNAME, { required: true });
     const password = core.getInput(Inputs.PASSWORD, { required: true });
@@ -66,12 +73,14 @@ async function run(): Promise<void> {
     const podmanMissingTags: string[] = podmanImageStorageCheckResult.missingTags;
 
     if (podmanFoundTags.length > 0) {
-        core.info(`Tag(s) ${podmanFoundTags.join(", ")} of ${imageToPush} found in Podman image storage`);
+        core.info(`Tag${podmanFoundTags.length !== 1 ? "s" : ""} "${podmanFoundTags.join(", ")}" `
+        + `of "${imageToPush}" found in Podman image storage`);
     }
 
-    // Log warning if few tags are found
+    // Log warning if few tags are not found
     if (podmanMissingTags.length > 0 && podmanFoundTags.length > 0) {
-        core.warning(`Tag(s) ${podmanMissingTags.join(", ")} of ${imageToPush} not found in Podman image storage`);
+        core.warning(`Tag${podmanMissingTags.length !== 1 ? "s" : ""} "${podmanMissingTags.join(", ")}" `
+        + `of "${imageToPush}" not found in Podman image storage`);
     }
 
     // check if image with all the required tags exist in Docker image storage
@@ -82,19 +91,23 @@ async function run(): Promise<void> {
     const dockerMissingTags: string[] = dockerImageStorageCheckResult.missingTags;
 
     if (dockerFoundTags.length > 0) {
-        core.info(`Tag(s) ${dockerFoundTags.join(", ")} of ${imageToPush} found in Docker image storage`);
+        core.info(`Tag${dockerFoundTags.length !== 1 ? "s" : ""} "${dockerFoundTags.join(", ")}" `
+        + `of "${imageToPush}" found in Docker image storage`);
     }
 
-    // Log warning if few tags are found
+    // Log warning if few tags are not found
     if (dockerMissingTags.length > 0 && dockerFoundTags.length > 0) {
-        core.warning(`Tag(s) ${dockerMissingTags.join(", ")} of ${imageToPush} not found in Docker image storage`);
+        core.warning(`Tag${dockerMissingTags.length !== 1 ? "s" : ""} "${dockerMissingTags.join(", ")}" `
+        + `of "${imageToPush}" not found in Docker image storage`);
     }
 
     // failing if image with any of the tag is not found in Docker as well as Podman
     if (podmanMissingTags.length > 0 && dockerMissingTags.length > 0) {
         throw new Error(
-            `Tag(s) ${podmanMissingTags.join(", ")} of ${imageToPush} not found in Podman image storage `
-            + `and Tag(s) ${dockerMissingTags.join(", ")} of ${imageToPush} not found in Docker image storage.`
+            `All tags for "${imageToPush}" were not found in either Podman image storage, or Docker image storage. `
+            + `Tag${podmanMissingTags.length !== 1 ? "s" : ""} "${podmanMissingTags.join(", ")}" `
+            + `not found in Podman image storage, and tag${dockerMissingTags.length !== 1 ? "s" : ""} `
+            + `"${dockerMissingTags.join(", ")}" not found in Docker image storage.`
         );
     }
 
@@ -105,7 +118,7 @@ async function run(): Promise<void> {
         const isPodmanImageLatest = await isPodmanLocalImageLatest();
         if (!isPodmanImageLatest) {
             core.warning(
-                `The version of ${imageToPush} in the Docker image storage is more recent `
+                `The version of "${imageToPush}" in the Docker image storage is more recent `
                     + `than the version in the Podman image storage. The image(s) from the Docker image storage `
                     + `will be pushed.`
             );
@@ -114,7 +127,7 @@ async function run(): Promise<void> {
         }
         else {
             core.warning(
-                `The version of ${imageToPush} in the Podman image storage is more recent `
+                `The version of "${imageToPush}" in the Podman image storage is more recent `
                     + `than the version in the Docker image storage. The image(s) from the Podman image `
                     + `storage will be pushed.`
             );
@@ -123,7 +136,7 @@ async function run(): Promise<void> {
     else if (allTagsinDocker) {
         imageToPush = `${dockerBaseUrl}/${imageToPush}`;
         core.info(
-            `${imageToPush} was found in the Docker image storage, but not in the Podman `
+            `"${imageToPush}" was found in the Docker image storage, but not in the Podman `
                 + `image storage. The image(s) will be pulled into Podman image storage, pushed, and then `
                 + `removed from the Podman image storage.`
         );
@@ -131,14 +144,15 @@ async function run(): Promise<void> {
     }
     else {
         core.info(
-            `${imageToPush} was found in the Podman image storage, but not in the Docker `
+            `"${imageToPush}" was found in the Podman image storage, but not in the Docker `
                 + `image storage. The image(s) will be pushed from Podman image storage.`
         );
     }
 
-    let pushMsg = `Pushing ${imageToPush} with tags ${tagsList.join(", ")} to ${registry}`;
+    let pushMsg = `Pushing "${imageToPush}" with tag${tagsList.length !== 1 ? "s" : ""} `
+    + `"${tagsList.join(", ")}" to "${registry}"`;
     if (username) {
-        pushMsg += ` as ${username}`;
+        pushMsg += ` as "${username}"`;
     }
     core.info(pushMsg);
 
@@ -181,7 +195,7 @@ async function run(): Promise<void> {
         }
 
         await execute(await getPodmanPath(), args);
-        core.info(`Successfully pushed ${imageWithTag} to ${registryPath}`);
+        core.info(`Successfully pushed "${imageWithTag}" to "${registryPath}"`);
 
         registryPathList.push(registryPath);
 
@@ -202,7 +216,8 @@ async function run(): Promise<void> {
 }
 
 async function pullImageFromDocker(): Promise<ImageStorageCheckResult> {
-    core.info(`Checking if ${imageToPush} with tag(s) ${tagsList.join(", ")} is present in Docker image storage`);
+    core.info(`Checking if "${imageToPush}" with tag${tagsList.length !== 1 ? "s" : ""} `
+    + `"${tagsList.join(", ")}" is present in Docker image storage`);
     let imageWithTag;
     const foundTags: string[] = [];
     const missingTags: string[] = [];
@@ -234,7 +249,8 @@ async function pullImageFromDocker(): Promise<ImageStorageCheckResult> {
 
 async function checkImageInPodman(): Promise<ImageStorageCheckResult> {
     // check if images exist in Podman's storage
-    core.info(`Checking if ${imageToPush} with tag(s) ${tagsList.join(", ")} is present in Podman image storage`);
+    core.info(`Checking if "${imageToPush}" with tag${tagsList.length !== 1 ? "s" : ""} `
+    + `"${tagsList.join(", ")}" is present in Podman image storage`);
     let imageWithTag;
     const foundTags: string[] = [];
     const missingTags: string[] = [];
@@ -299,7 +315,7 @@ async function isPodmanLocalImageLatest(): Promise<boolean> {
 // remove the pulled image from the Podman image storage
 async function removeDockerImage(): Promise<void> {
     if (imageToPush) {
-        core.info(`Removing ${imageToPush} from the Podman image storage`);
+        core.info(`Removing "${imageToPush}" from the Podman image storage`);
         for (const tag of tagsList) {
             const imageWithTag = `${imageToPush}:${tag}`;
             await execute(await getPodmanPath(), [ "rmi", imageWithTag ]);
