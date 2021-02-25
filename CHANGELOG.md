@@ -1,5 +1,9 @@
 # push-to-registry Changelog
 
+## v2.1.1
+- Add output message if input `tags` is not provided
+- Modify output message if tag(s) are not found
+
 ## v2.1
 - Add output `registy-path` to output first element of `registry-paths`
 - Print image digest after every push to verify image digest for each tag
