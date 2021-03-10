@@ -227,7 +227,7 @@ async function pullImageFromDocker(): Promise<ImageStorageCheckResult> {
             const commandResult: ExecResult = await execute(
                 await getPodmanPath(),
                 [ "pull", `docker-daemon:${imageWithTag}` ],
-                { ignoreReturnCode: true, failOnStdErr: false }
+                { ignoreReturnCode: true, failOnStdErr: false, group: true }
             );
             if (!commandResult.exitCode) {
                 foundTags.push(tag);
@@ -326,7 +326,7 @@ async function removeDockerImage(): Promise<void> {
 async function execute(
     executable: string,
     args: string[],
-    execOptions: exec.ExecOptions = {},
+    execOptions: exec.ExecOptions & { group?: boolean } = {},
 ): Promise<ExecResult> {
     let stdout = "";
     let stderr = "";
@@ -343,23 +343,36 @@ async function execute(
         },
     };
 
-    const exitCode = await exec.exec(executable, args, finalExecOptions);
-
-    if (execOptions.ignoreReturnCode !== true && exitCode !== 0) {
-        // Throwing the stderr as part of the Error makes the stderr show up in the action outline,
-        // which saves some clicking when debugging.
-        let error = `${path.basename(executable)} exited with code ${exitCode}`;
-        if (stderr) {
-            error += `\n${stderr}`;
-        }
-        throw new Error(error);
+    if (execOptions.group) {
+        const groupName = [ executable, ...args ].join(" ");
+        core.startGroup(groupName);
     }
 
-    return {
-        exitCode,
-        stdout,
-        stderr,
-    };
+    try {
+        const exitCode = await exec.exec(executable, args, finalExecOptions);
+
+        if (execOptions.ignoreReturnCode !== true && exitCode !== 0) {
+            // Throwing the stderr as part of the Error makes the stderr show up in the action outline,
+            // which saves some clicking when debugging.
+            let error = `${path.basename(executable)} exited with code ${exitCode}`;
+            if (stderr) {
+                error += `\n${stderr}`;
+            }
+            throw new Error(error);
+        }
+
+        return {
+            exitCode,
+            stdout,
+            stderr,
+        };
+    }
+
+    finally {
+        if (execOptions.group) {
+            core.endGroup();
+        }
+    }
 }
 
 run()
