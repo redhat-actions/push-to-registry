@@ -2,6 +2,9 @@ name: Multiple container CLI build tests
 on:
   push:
   workflow_dispatch:
+  schedule:
+    - cron: '0 0 * * *'  # every day at midnight
+
 env:
   IMAGE_NAME: myimage
   IMAGE_TAG: v1

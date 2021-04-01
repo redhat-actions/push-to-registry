@@ -5,6 +5,8 @@ name: Test Build and Push
 on:
   push:
   workflow_dispatch:
+  schedule:
+    - cron: '0 0 * * *'  # every day at midnight
 
 env:
   PROJECT_DIR: spring-petclinic
