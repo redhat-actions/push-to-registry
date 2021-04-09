@@ -159,7 +159,13 @@ async function run(): Promise<void> {
     const registryWithoutTrailingSlash = registry.replace(/\/$/, "");
 
     let creds = "";
-    if (username && password) {
+    if (username && !password) {
+        core.warning("Username is provided, but password is missing!");
+    }
+    else if (!username && password) {
+        core.warning("Password is provided, but username is missing!");
+    }
+    else if (username && password) {
         creds = `${username}:${password}`;
     }
 
