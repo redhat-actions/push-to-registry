@@ -86,6 +86,16 @@ jobs:
             spring-petclinic-*.jar
           port: 8080
           oci: 'true'
+        env:
+          STORAGE_OPTS: "overlay.mount_program=/usr/bin/fuse-overlayfs"
+
+      # Authenticate to container image registry to push the image
+      - name: Podman Login
+        uses: redhat-actions/podman-login@v1
+        with:
+          registry: quay.io
+          username: ${{ secrets.REGISTRY_USER }}
+          password: ${{ secrets.REGISTRY_PASSWORD }}
 
       # Push the image to Quay.io (Image Registry)
       - name: Push To Quay
@@ -95,8 +105,6 @@ jobs:
           image: ${{ steps.build_image.outputs.image }}
           tags: ${{ steps.build_image.outputs.tags }}
           registry: ${{ env.IMAGE_REGISTRY }}/${{ secrets.REGISTRY_USER }}
-          username: ${{ secrets.REGISTRY_USER }}
-          password: ${{ secrets.REGISTRY_PASSWORD }}
           extra-args: |
             --disable-content-trust
 

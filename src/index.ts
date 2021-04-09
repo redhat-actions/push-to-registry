@@ -49,8 +49,8 @@ async function run(): Promise<void> {
         tagsList.push(DEFAULT_TAG);
     }
     const registry = core.getInput(Inputs.REGISTRY, { required: true });
-    const username = core.getInput(Inputs.USERNAME, { required: true });
-    const password = core.getInput(Inputs.PASSWORD, { required: true });
+    const username = core.getInput(Inputs.USERNAME);
+    const password = core.getInput(Inputs.PASSWORD);
     const tlsVerify = core.getInput(Inputs.TLS_VERIFY);
     const digestFileInput = core.getInput(Inputs.DIGESTFILE);
 
@@ -158,7 +158,10 @@ async function run(): Promise<void> {
 
     const registryWithoutTrailingSlash = registry.replace(/\/$/, "");
 
-    const creds = `${username}:${password}`;
+    let creds = "";
+    if (username && password) {
+        creds = `${username}:${password}`;
+    }
 
     let digestFile = digestFileInput;
     const imageNameWithTag = `${imageToPush}:${tagsList[0]}`;
@@ -179,8 +182,6 @@ async function run(): Promise<void> {
             "--quiet",
             "--digestfile",
             digestFile,
-            "--creds",
-            creds,
             imageWithTag,
             registryPath,
         ];
@@ -192,6 +193,11 @@ async function run(): Promise<void> {
         // check if tls-verify is not set to null
         if (tlsVerify) {
             args.push(`--tls-verify=${tlsVerify}`);
+        }
+
+        // check if registry creds are provided
+        if (creds) {
+            args.push(`--creds=${creds}`);
         }
 
         await execute(await getPodmanPath(), args);

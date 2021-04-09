@@ -23,7 +23,7 @@ export enum Inputs {
     IMAGE = "image",
     /**
      * Password to use as credential to authenticate to the registry
-     * Required: true
+     * Required: false
      * Default: None.
      */
     PASSWORD = "password",
@@ -47,7 +47,7 @@ export enum Inputs {
     TLS_VERIFY = "tls-verify",
     /**
      * Username to use as credential to authenticate to the registry
-     * Required: true
+     * Required: false
      * Default: None.
      */
     USERNAME = "username",

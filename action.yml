@@ -17,10 +17,10 @@ inputs:
     required: true
   username:
     description: 'Username to use as credential to authenticate to the registry'
-    required: true
+    required: false
   password:
     description: 'Password to use as credential to authenticate to the registry'
-    required: true
+    required: false
   tls-verify:
     description: 'Verify TLS certificates when contacting the registry'
     required: false
