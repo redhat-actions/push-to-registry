@@ -27,7 +27,7 @@ let tagsList: string[];
 async function getPodmanPath(): Promise<string> {
     if (podmanPath == null) {
         podmanPath = await io.which("podman", true);
-        await execute(podmanPath, [ "version" ]);
+        await execute(podmanPath, [ "version" ], { group: true });
     }
 
     return podmanPath;
