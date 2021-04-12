@@ -54,7 +54,7 @@ async function run(): Promise<void> {
     const tlsVerify = core.getInput(Inputs.TLS_VERIFY);
     const digestFileInput = core.getInput(Inputs.DIGESTFILE);
 
-    const inputExtraArgsStr = core.getInput("extra-args");
+    const inputExtraArgsStr = core.getInput(Inputs.EXTRA_ARGS);
     let podmanExtraArgs: string[] = [];
     if (inputExtraArgsStr) {
         // transform the array of lines into an array of arguments
@@ -160,10 +160,10 @@ async function run(): Promise<void> {
 
     let creds = "";
     if (username && !password) {
-        core.warning("Username is provided, but password is missing!");
+        core.warning("Username is provided, but password is missing");
     }
     else if (!username && password) {
-        core.warning("Password is provided, but username is missing!");
+        core.warning("Password is provided, but username is missing");
     }
     else if (username && password) {
         creds = `${username}:${password}`;

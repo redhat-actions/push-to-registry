@@ -14,7 +14,7 @@ Push-to-registry is a GitHub Action for pushing a container image to an image re
 
 This action only runs on Linux, as it uses [podman](https://github.com/containers/Podman) to perform the push. [GitHub's Ubuntu action runners](https://github.com/actions/virtual-environments#available-environments) come with Podman preinstalled. If you are not using those runners, you must first [install Podman](https://podman.io/getting-started/installation).
 
-To log in against a container image registry, [**podman-login**](https://github.com/redhat-actions/podman-login) can be used.
+To log in to a container image registry, [**podman-login**](https://github.com/redhat-actions/podman-login) action can be used.
 
 ## Action Inputs
 
@@ -73,8 +73,8 @@ jobs:
         dockerfiles: |
           ./Dockerfile
 
-    # Podman Login action (https://github.com/redhat-actions/podman-login)ccan be used
-    # in the previous step to log into a container registry. In that case input "username"
+    # Podman Login action (https://github.com/redhat-actions/podman-login) can be used
+    # in the previous step to log in to a container registry. In that case input "username"
     # "password" can be omitted in this push action.
     - name: Push To quay.io
       id: push-to-quay
