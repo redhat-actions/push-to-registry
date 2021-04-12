@@ -14,7 +14,7 @@ Push-to-registry is a GitHub Action for pushing a container image to an image re
 
 This action only runs on Linux, as it uses [podman](https://github.com/containers/Podman) to perform the push. [GitHub's Ubuntu action runners](https://github.com/actions/virtual-environments#available-environments) come with Podman preinstalled. If you are not using those runners, you must first [install Podman](https://podman.io/getting-started/installation).
 
-To log in to a container image registry, [**podman-login**](https://github.com/redhat-actions/podman-login) action can be used.
+You can log in to your container registry for the entire job using the [**podman-login**](https://github.com/redhat-actions/podman-login) action. Otherwise, use the `username` and `password` inputs to log in for this step.
 
 ## Action Inputs
 
@@ -23,22 +23,31 @@ Refer to the [`podman push`](http://docs.podman.io/en/latest/markdown/podman-man
 | Input Name | Description | Default |
 | ---------- | ----------- | ------- |
 | image	| Name of the image you want to push. | **Required**
-| tags | The tag or tags of the image to push. For multiple tags, seperate by a space. For example, `latest ${{ github.sha }}` | `latest`
+| tags | The tag or tags of the image to push. For multiple tags, separate by a space. For example, `latest ${{ github.sha }}`. | `latest`
 | registry | URL of the registry to push the image to. Eg. `quay.io/<username>` | **Required**
-| username | Username with which to authenticate to the registry. Required unless already logged in to the registry | None
-| password | Password, encrypted password, or access token with which to authenticate to the registry. Required unless already logged in to the registry | None
+| username | Username with which to authenticate to the registry. Required unless already logged in to the registry. | None
+| password | Password, encrypted password, or access token to use to log in to the registry. Required unless already logged in to the registry. | None
 | tls-verify | Verify TLS certificates when contacting the registry. Set to `false` to skip certificate verification. | `true`
-| digestfile | After copying the image, write the digest of the resulting image to the file. The contents of this file are the digest output. | Auto determined from image and tag
+| digestfile | After copying the image, write the digest of the resulting image to the file. The contents of this file are the digest output. | Auto-generated from image and tag
 | extra-args | Extra args to be passed to podman push. Separate arguments by newline. Do not use quotes. | None
 
 ## Action Outputs
 
 `digest`: The pushed image digest, as written to the `digestfile`.<br>
-For example, `sha256:66ce924069ec4181725d15aa27f34afbaf082f434f448dc07a42daa3305cdab3`.
+For example:
+```
+sha256:66ce924069ec4181725d15aa27f34afbaf082f434f448dc07a42daa3305cdab3
+```
+
 For multiple tags, the digest is the same.
 
 `registry-paths`: A JSON array of registry paths to which the tag(s) were pushed.<br>
-For example, `[ quay.io/username/spring-image:v1, quay.io/username/spring-image:latest ]`.
+
+For example:
+
+```
+[ "quay.io/username/spring-image:v1", "quay.io/username/spring-image:latest" ]
+```
 
 `registry-path`: The first element of `registry-paths`, as a string.
 
@@ -54,11 +63,6 @@ jobs:
   build:
     name: Build and push image
     runs-on: ubuntu-20.04
-    env:
-      IMAGE_NAME: my-app
-      IMAGE_TAGS: latest v1
-      REGISTRY_USER: quayuser
-      REGISTRY_PASSWORD: ${{ secrets.REGISTRY_PASSWORD }}
 
     steps:
     - uses: actions/checkout@v2
@@ -67,27 +71,25 @@ jobs:
       id: build-image
       uses: redhat-actions/buildah-build@v2
       with:
-        image: ${{ env.IMAGE_NAME }}
-        tags: ${{ env.IMAGE_TAGS }}
-        base-image: some_image
+        image: my-app
+        tags: latest ${{ github.sha }}
         dockerfiles: |
           ./Dockerfile
 
-    # Podman Login action (https://github.com/redhat-actions/podman-login) can be used
-    # in the previous step to log in to a container registry. In that case input "username"
-    # "password" can be omitted in this push action.
+    # Podman Login action (https://github.com/redhat-actions/podman-login) also be used to log in,
+    # in which case 'username' and 'password' can be omitted.
     - name: Push To quay.io
       id: push-to-quay
       uses: redhat-actions/push-to-registry@v2
       with:
         image: ${{ steps.build-image.outputs.image }}
         tags: ${{ steps.build-image.outputs.tags }}
-        registry: ${{ secrets.QUAY_REPO }}
-        username: ${{ env.REGISTRY_USER }}
-        password: ${{ env.REGISTRY_PASSWORD }}
+        registry: quay.io/quay-user
+        username: quay-user
+        password: ${{ secrets.REGISTRY_PASSWORD }}
 
-    - name: Use the image
-      run: echo "New image has been pushed to ${{ steps.push-to-quay.outputs.registry-paths }}"
+    - name: Print image url
+      run: echo "Image pushed to ${{ steps.push-to-quay.outputs.registry-paths }}"
 ```
 
 ## Note about images built with Docker
