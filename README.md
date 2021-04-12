@@ -1,7 +1,8 @@
 # push-to-registry
 
 [![CI checks](https://github.com/redhat-actions/push-to-registry/workflows/CI%20checks/badge.svg)](https://github.com/redhat-actions/push-to-registry/actions?query=workflow%3A%22CI+checks%22)
-[![Test Build and Push](https://github.com/redhat-actions/push-to-registry/workflows/Test%20Build%20and%20Push/badge.svg)](https://github.com/redhat-actions/push-to-registry/actions?query=workflow%3A%22Test+Build+and+Push%22)
+[![Build and Push](https://github.com/redhat-actions/push-to-registry/workflows/Build%20and%20Push/badge.svg)](https://github.com/redhat-actions/push-to-registry/actions?query=workflow%3A%22Build+and+Push%22)
+[![Login and Push](https://github.com/redhat-actions/push-to-registry/workflows/Login%20and%20Push/badge.svg)](https://github.com/redhat-actions/push-to-registry/actions?query=workflow%3A%22Login+and+Push%22)
 [![Multiple container CLI build tests](https://github.com/redhat-actions/push-to-registry/workflows/Multiple%20container%20CLI%20build%20tests/badge.svg)](https://github.com/redhat-actions/push-to-registry/actions?query=workflow%3A%22Multiple+container+CLI+build+tests%22)
 [![Link checker](https://github.com/redhat-actions/push-to-registry/workflows/Link%20checker/badge.svg)](https://github.com/redhat-actions/push-to-registry/actions?query=workflow%3A%22Link+checker%22)
 <br><br>
@@ -9,80 +10,26 @@
 [![license badge](https://img.shields.io/github/license/redhat-actions/push-to-registry)](./LICENSE)
 [![size badge](https://img.shields.io/github/size/redhat-actions/push-to-registry/dist/index.js)](./dist)
 
-Push-to-registry is a GitHub Action for pushing a container image to an image registry, such as Dockerhub, Quay&#46;io, the GitHub Container Registry, or an OpenShift integrated registry.
+Push-to-registry is a GitHub Action for pushing a container image to an image registry, such as Dockerhub, quay&#46;io, the GitHub Container Registry, or an OpenShift integrated registry.
 
 This action only runs on Linux, as it uses [podman](https://github.com/containers/Podman) to perform the push. [GitHub's Ubuntu action runners](https://github.com/actions/virtual-environments#available-environments) come with Podman preinstalled. If you are not using those runners, you must first [install Podman](https://podman.io/getting-started/installation).
+
+To log in to a container image registry, [**podman-login**](https://github.com/redhat-actions/podman-login) action can be used.
 
 ## Action Inputs
 
 Refer to the [`podman push`](http://docs.podman.io/en/latest/markdown/podman-manifest-push.1.html) documentation for more information.
 
-<table>
-  <thead>
-    <tr>
-      <th>Input</th>
-      <th>Required</th>
-      <th>Description</th>
-    </tr>
-  </thead>
-
-  <tr>
-    <td>image</td>
-    <td>Yes</td>
-    <td>
-      Name of the image you want to push.
-    </td>
-  </tr>
-
-  <tr>
-    <td>tags</td>
-    <td>No</td>
-    <td>
-      The tag or tags of the image to push. For multiple tags, seperate by a space. For example, <code>latest ${{ github.sha }}</code><br>
-      Defaults to <code>latest</code>.
-    </td>
-  </tr>
-
-  <tr>
-    <td>registry</td>
-    <td>Yes</td>
-    <td>URL of the registry to push the image to.<br>
-    Eg. <code>quay.io/&lt;username&gt;</code></td>
-  </tr>
-
-  <tr>
-    <td>username</td>
-    <td>Yes</td>
-    <td>Username with which to authenticate to the registry.</td>
-  </tr>
-
-  <tr>
-    <td>password</td>
-    <td>Yes</td>
-    <td>Password, encrypted password, or access token with which to authenticate to the registry.</td>
-  </tr>
-
-   <tr>
-    <td>tls-verify</td>
-    <td>No</td>
-    <td>Verify TLS certificates when contacting the registry. Set to "false" to skip certificate verification.</td>
-  </tr>
-
-  <tr>
-    <td>digestfile</td>
-    <td>No</td>
-    <td>After copying the image, write the digest of the resulting image to the file. By default, the filename will be determined from the image and tag.
-    The contents of this file are the <code>digest</code> output.</td>
-  </tr>
-
-  <tr>
-    <td>extra-args</td>
-    <td>No</td>
-    <td>Extra args to be passed to podman push.
-      Separate arguments by newline. Do not use quotes.</td>
-  </tr>
-
-</table>
+| Input Name | Description | Default |
+| ---------- | ----------- | ------- |
+| image	| Name of the image you want to push. | **Required**
+| tags | The tag or tags of the image to push. For multiple tags, seperate by a space. For example, `latest ${{ github.sha }}` | `latest`
+| registry | URL of the registry to push the image to. Eg. `quay.io/<username>` | **Required**
+| username | Username with which to authenticate to the registry. Required unless already logged in to the registry | None
+| password | Password, encrypted password, or access token with which to authenticate to the registry. Required unless already logged in to the registry | None
+| tls-verify | Verify TLS certificates when contacting the registry. Set to `false` to skip certificate verification. | `true`
+| digestfile | After copying the image, write the digest of the resulting image to the file. The contents of this file are the digest output. | Auto determined from image and tag
+| extra-args | Extra args to be passed to podman push. Separate arguments by newline. Do not use quotes. | None
 
 ## Action Outputs
 
@@ -97,7 +44,7 @@ For example, `[ quay.io/username/spring-image:v1, quay.io/username/spring-image:
 
 ## Examples
 
-The example below shows how the `push-to-registry` action can be used to push an image created by the [buildah-build](https://github.com/redhat-actions/buildah-build) action.
+The example below shows how the `push-to-registry` action can be used to push an image created by the [**buildah-build**](https://github.com/redhat-actions/buildah-build) action.
 
 ```yaml
 name: Build and Push Image
@@ -110,6 +57,8 @@ jobs:
     env:
       IMAGE_NAME: my-app
       IMAGE_TAGS: latest v1
+      REGISTRY_USER: quayuser
+      REGISTRY_PASSWORD: ${{ secrets.REGISTRY_PASSWORD }}
 
     steps:
     - uses: actions/checkout@v2
@@ -124,15 +73,18 @@ jobs:
         dockerfiles: |
           ./Dockerfile
 
-    - name: Push To Quay
+    # Podman Login action (https://github.com/redhat-actions/podman-login) can be used
+    # in the previous step to log in to a container registry. In that case input "username"
+    # "password" can be omitted in this push action.
+    - name: Push To quay.io
       id: push-to-quay
       uses: redhat-actions/push-to-registry@v2
       with:
         image: ${{ steps.build-image.outputs.image }}
         tags: ${{ steps.build-image.outputs.tags }}
         registry: ${{ secrets.QUAY_REPO }}
-        username: ${{ secrets.QUAY_USERNAME }}
-        password: ${{ secrets.QUAY_TOKEN }}
+        username: ${{ env.REGISTRY_USER }}
+        password: ${{ env.REGISTRY_PASSWORD }}
 
     - name: Use the image
       run: echo "New image has been pushed to ${{ steps.push-to-quay.outputs.registry-paths }}"

@@ -27,7 +27,7 @@ let tagsList: string[];
 async function getPodmanPath(): Promise<string> {
     if (podmanPath == null) {
         podmanPath = await io.which("podman", true);
-        await execute(podmanPath, [ "version" ]);
+        await execute(podmanPath, [ "version" ], { group: true });
     }
 
     return podmanPath;
@@ -49,12 +49,12 @@ async function run(): Promise<void> {
         tagsList.push(DEFAULT_TAG);
     }
     const registry = core.getInput(Inputs.REGISTRY, { required: true });
-    const username = core.getInput(Inputs.USERNAME, { required: true });
-    const password = core.getInput(Inputs.PASSWORD, { required: true });
+    const username = core.getInput(Inputs.USERNAME);
+    const password = core.getInput(Inputs.PASSWORD);
     const tlsVerify = core.getInput(Inputs.TLS_VERIFY);
     const digestFileInput = core.getInput(Inputs.DIGESTFILE);
 
-    const inputExtraArgsStr = core.getInput("extra-args");
+    const inputExtraArgsStr = core.getInput(Inputs.EXTRA_ARGS);
     let podmanExtraArgs: string[] = [];
     if (inputExtraArgsStr) {
         // transform the array of lines into an array of arguments
@@ -158,7 +158,16 @@ async function run(): Promise<void> {
 
     const registryWithoutTrailingSlash = registry.replace(/\/$/, "");
 
-    const creds = `${username}:${password}`;
+    let creds = "";
+    if (username && !password) {
+        core.warning("Username is provided, but password is missing");
+    }
+    else if (!username && password) {
+        core.warning("Password is provided, but username is missing");
+    }
+    else if (username && password) {
+        creds = `${username}:${password}`;
+    }
 
     let digestFile = digestFileInput;
     const imageNameWithTag = `${imageToPush}:${tagsList[0]}`;
@@ -179,8 +188,6 @@ async function run(): Promise<void> {
             "--quiet",
             "--digestfile",
             digestFile,
-            "--creds",
-            creds,
             imageWithTag,
             registryPath,
         ];
@@ -192,6 +199,11 @@ async function run(): Promise<void> {
         // check if tls-verify is not set to null
         if (tlsVerify) {
             args.push(`--tls-verify=${tlsVerify}`);
+        }
+
+        // check if registry creds are provided
+        if (creds) {
+            args.push(`--creds=${creds}`);
         }
 
         await execute(await getPodmanPath(), args);

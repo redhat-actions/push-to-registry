@@ -1,10 +1,12 @@
 # This workflow will perform a test whenever there
 # is some change in code done to ensure that the changes
 # are not buggy and we are getting the desired output.
-name: Test Build and Push
+name: Build and Push
 on:
   push:
   workflow_dispatch:
+  schedule:
+    - cron: '0 0 * * *'  # every day at midnight
 
 env:
   PROJECT_DIR: spring-petclinic
