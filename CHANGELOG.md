@@ -1,5 +1,8 @@
 # push-to-registry Changelog
 
+## v2.2
+- Make input `username` and `password` optional, so that user can skip if they are already logged in to container image registry.   
+
 ## v2.1.1
 - Add output message if input `tags` is not provided
 - Modify output message if tag(s) are not found
