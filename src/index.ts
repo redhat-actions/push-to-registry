@@ -250,7 +250,7 @@ async function pullImageFromDocker(): Promise<ImageStorageCheckResult> {
         }
     }
     catch (err) {
-        core.debug(err);
+        core.warning(err);
     }
 
     return {
