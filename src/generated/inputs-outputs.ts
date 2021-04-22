@@ -16,7 +16,7 @@ export enum Inputs {
      */
     EXTRA_ARGS = "extra-args",
     /**
-     * Name of the image to push
+     * Name of the image to push (e.g. username/imagename or imagename)
      * Required: true
      * Default: None.
      */
@@ -28,7 +28,7 @@ export enum Inputs {
      */
     PASSWORD = "password",
     /**
-     * Registry where to push the image (eg. quay.io/username)
+     * Hostname and optional namespace to push the image to (eg. quay.io/username or quay.io)
      * Required: true
      * Default: None.
      */
