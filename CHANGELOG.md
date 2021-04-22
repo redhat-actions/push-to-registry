@@ -1,7 +1,11 @@
 # push-to-registry Changelog
 
+## v2.3
+- Warn users if input `image` and `registry` both has `/` in it's name.
+- Update README to better explain inputs `image` and `registry`
+
 ## v2.2
-- Make input `username` and `password` optional, so that user can skip if they are already logged in to container image registry.   
+- Make input `username` and `password` optional, so that user can skip if they are already logged in to container image registry.
 
 ## v2.1.1
 - Add output message if input `tags` is not provided
