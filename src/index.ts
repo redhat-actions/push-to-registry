@@ -182,7 +182,9 @@ async function run(): Promise<void> {
     + `to form registry path "${registryPath}"`);
 
     if (imageInput.indexOf("/") > -1 && registry.indexOf("/") > -1) {
-        core.warning(`Registry path "${registryPath}" doesn't seems to be a valid registry path.`);
+        core.warning(`"${registryPath}" does not seem to be a valid registry path. `
+        + `The registry path should not contain more than 2 slashes. `
+        + `Refer to the Inputs section of the readme for naming image and registry.`);
     }
 
     // push the image
@@ -393,11 +395,11 @@ async function execute(
 }
 
 run()
-    .catch((err) => {
-        core.setFailed(err.message);
-    })
-    .finally(async () => {
+    .then(async () => {
         if (isImageFromDocker) {
             await removeDockerImage();
         }
+    })
+    .catch((err) => {
+        core.setFailed(err.message);
     });

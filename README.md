@@ -22,9 +22,9 @@ Refer to the [`podman push`](http://docs.podman.io/en/latest/markdown/podman-man
 
 | Input Name | Description | Default |
 | ---------- | ----------- | ------- |
-| image	| Name of the image you want to push. Eg. `username/imagename` or `imagename` | **Required**
+| image	| Name of the image you want to push. Eg. `username/imagename` or `imagename`. See the note below about naming image and registry. | **Required**
 | tags | The tag or tags of the image to push. For multiple tags, separate by a space. For example, `latest ${{ github.sha }}`. | `latest`
-| registry | URL of the registry to push the image to. Eg. `quay.io` or `quay.io/username` | **Required**
+| registry | Hostname and optional namespace to push the image to. Eg. `quay.io` or `quay.io/username`. See the note below about naming image and registry. | **Required**
 | username | Username with which to authenticate to the registry. Required unless already logged in to the registry. | None
 | password | Password, encrypted password, or access token to use to log in to the registry. Required unless already logged in to the registry. | None
 | tls-verify | Verify TLS certificates when contacting the registry. Set to `false` to skip certificate verification. | `true`

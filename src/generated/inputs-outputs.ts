@@ -28,7 +28,7 @@ export enum Inputs {
      */
     PASSWORD = "password",
     /**
-     * Registry URL to push the image to (eg. quay.io/username or quay.io)
+     * Hostname and optional namespace to push the image to (eg. quay.io/username or quay.io)
      * Required: true
      * Default: None.
      */

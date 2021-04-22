@@ -13,7 +13,7 @@ inputs:
     required: false
     default: 'latest'
   registry:
-    description: 'Registry URL to push the image to (eg. quay.io/username or quay.io)'
+    description: 'Hostname and optional namespace to push the image to (eg. quay.io/username or quay.io)'
     required: true
   username:
     description: 'Username to use as credential to authenticate to the registry'
