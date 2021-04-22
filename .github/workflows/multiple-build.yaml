@@ -9,6 +9,7 @@ env:
   IMAGE_NAME: myimage
   IMAGE_TAG: v1
   IMAGE_REGISTRY: quay.io
+  STORAGE_OPTS: "overlay.mount_program=/usr/bin/fuse-overlayfs"
 
 jobs:
   build-only-podman:

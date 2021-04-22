@@ -44,7 +44,7 @@ async function run(): Promise<void> {
     tagsList = tags.split(" ");
 
     // info message if user doesn't provides any tag
-    if (!tagsList.length) {
+    if (tagsList.length === 0) {
         core.info(`Input "${Inputs.TAGS}" is not provided, using default tag "${DEFAULT_TAG}"`);
         tagsList.push(DEFAULT_TAG);
     }
@@ -104,7 +104,7 @@ async function run(): Promise<void> {
     // failing if image with any of the tag is not found in Docker as well as Podman
     if (podmanMissingTags.length > 0 && dockerMissingTags.length > 0) {
         throw new Error(
-            `All tags for "${imageToPush}" were not found in either Podman image storage, or Docker image storage. `
+            `❌ All tags for "${imageToPush}" were not found in either Podman image storage, or Docker image storage. `
             + `Tag${podmanMissingTags.length !== 1 ? "s" : ""} "${podmanMissingTags.join(", ")}" `
             + `not found in Podman image storage, and tag${dockerMissingTags.length !== 1 ? "s" : ""} `
             + `"${dockerMissingTags.join(", ")}" not found in Docker image storage.`
@@ -149,14 +149,12 @@ async function run(): Promise<void> {
         );
     }
 
-    let pushMsg = `Pushing "${imageToPush}" with tag${tagsList.length !== 1 ? "s" : ""} `
+    let pushMsg = `⏳ Pushing "${imageToPush}" with tag${tagsList.length !== 1 ? "s" : ""} `
     + `"${tagsList.join(", ")}" to "${registry}"`;
     if (username) {
         pushMsg += ` as "${username}"`;
     }
     core.info(pushMsg);
-
-    const registryWithoutTrailingSlash = registry.replace(/\/$/, "");
 
     let creds = "";
     if (username && !password) {
@@ -178,18 +176,25 @@ async function run(): Promise<void> {
         )}_digest.txt`;
     }
 
+    const registryWithoutTrailingSlash = registry.replace(/\/$/, "");
+    const registryPath = `${registryWithoutTrailingSlash}/${imageInput}`;
+    core.info(`Combining image name "${imageInput}" and registry "${registry}" `
+    + `to form registry path "${registryPath}"`);
+
+    if (imageInput.indexOf("/") > -1 && registry.indexOf("/") > -1) {
+        core.warning(`Registry path "${registryPath}" doesn't seems to be a valid registry path.`);
+    }
+
     // push the image
     for (const tag of tagsList) {
         const imageWithTag = `${imageToPush}:${tag}`;
-        const registryPath = `${registryWithoutTrailingSlash}/${imageInput}:${tag}`;
-
         const args = [
             "push",
             "--quiet",
             "--digestfile",
             digestFile,
             imageWithTag,
-            registryPath,
+            `${registryPath}:${tag}`,
         ];
 
         if (podmanExtraArgs.length > 0) {
@@ -207,7 +212,7 @@ async function run(): Promise<void> {
         }
 
         await execute(await getPodmanPath(), args);
-        core.info(`Successfully pushed "${imageWithTag}" to "${registryPath}"`);
+        core.info(`✅ Successfully pushed "${imageWithTag}" to "${registryPath}"`);
 
         registryPathList.push(registryPath);
 
@@ -228,7 +233,7 @@ async function run(): Promise<void> {
 }
 
 async function pullImageFromDocker(): Promise<ImageStorageCheckResult> {
-    core.info(`Checking if "${imageToPush}" with tag${tagsList.length !== 1 ? "s" : ""} `
+    core.info(`🔍 Checking if "${imageToPush}" with tag${tagsList.length !== 1 ? "s" : ""} `
     + `"${tagsList.join(", ")}" is present in Docker image storage`);
     let imageWithTag;
     const foundTags: string[] = [];
@@ -241,7 +246,7 @@ async function pullImageFromDocker(): Promise<ImageStorageCheckResult> {
                 [ "pull", `docker-daemon:${imageWithTag}` ],
                 { ignoreReturnCode: true, failOnStdErr: false, group: true }
             );
-            if (!commandResult.exitCode) {
+            if (commandResult.exitCode === 0) {
                 foundTags.push(tag);
             }
             else {
@@ -261,7 +266,7 @@ async function pullImageFromDocker(): Promise<ImageStorageCheckResult> {
 
 async function checkImageInPodman(): Promise<ImageStorageCheckResult> {
     // check if images exist in Podman's storage
-    core.info(`Checking if "${imageToPush}" with tag${tagsList.length !== 1 ? "s" : ""} `
+    core.info(`🔍 Checking if "${imageToPush}" with tag${tagsList.length !== 1 ? "s" : ""} `
     + `"${tagsList.join(", ")}" is present in Podman image storage`);
     let imageWithTag;
     const foundTags: string[] = [];
@@ -274,7 +279,7 @@ async function checkImageInPodman(): Promise<ImageStorageCheckResult> {
                 [ "image", "exists", imageWithTag ],
                 { ignoreReturnCode: true }
             );
-            if (!commandResult.exitCode) {
+            if (commandResult.exitCode === 0) {
                 foundTags.push(tag);
             }
             else {
@@ -388,9 +393,11 @@ async function execute(
 }
 
 run()
-    .catch(core.setFailed)
-    .finally(() => {
+    .catch((err) => {
+        core.setFailed(err.message);
+    })
+    .finally(async () => {
         if (isImageFromDocker) {
-            removeDockerImage();
+            await removeDockerImage();
         }
     });
