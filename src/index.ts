@@ -195,13 +195,14 @@ async function run(): Promise<void> {
     // push the image
     for (const tag of tagsList) {
         const imageWithTag = `${imageToPush}:${tag}`;
+        const registryPathWithTag = `${registryPath}:${tag}`;
         const args = [
             "push",
             "--quiet",
             "--digestfile",
             digestFile,
             imageWithTag,
-            `${registryPath}:${tag}`,
+            registryPathWithTag,
         ];
 
         if (podmanExtraArgs.length > 0) {
@@ -219,9 +220,9 @@ async function run(): Promise<void> {
         }
 
         await execute(await getPodmanPath(), args);
-        core.info(`✅ Successfully pushed "${imageWithTag}" to "${registryPath}"`);
+        core.info(`✅ Successfully pushed "${imageWithTag}" to "${registryPathWithTag}"`);
 
-        registryPathList.push(registryPath);
+        registryPathList.push(registryPathWithTag);
 
         try {
             const digest = (await fs.promises.readFile(digestFile)).toString();
