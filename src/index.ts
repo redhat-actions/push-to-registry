@@ -23,6 +23,7 @@ let podmanPath: string | undefined;
 let isImageFromDocker = false;
 let imageToPush: string;
 let tagsList: string[];
+let dockerBaseUrl: string;
 
 async function getPodmanPath(): Promise<string> {
     if (podmanPath == null) {
@@ -34,7 +35,8 @@ async function getPodmanPath(): Promise<string> {
 }
 
 // base URL that gets appended if image is pulled from the Docker imaege storage
-const dockerBaseUrl = "docker.io/library";
+const DOCKER_IO = `docker.io`;
+const DOCKER_IO_NAMESPACED = DOCKER_IO + `/library`;
 
 async function run(): Promise<void> {
     const DEFAULT_TAG = "latest";
@@ -42,6 +44,9 @@ async function run(): Promise<void> {
     const tags = core.getInput(Inputs.TAGS);
     // split tags
     tagsList = tags.split(" ");
+
+    // handle the case when image name is 'namespace/imagename' and image is present in docker storage
+    dockerBaseUrl = imageInput.indexOf("/") > -1 ? DOCKER_IO : DOCKER_IO_NAMESPACED;
 
     // info message if user doesn't provides any tag
     if (tagsList.length === 0) {
