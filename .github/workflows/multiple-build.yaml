@@ -49,7 +49,7 @@ jobs:
 
       - name: Build image using Docker
         run: |
-            docker build -t ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }} -<<EOF
+            docker build -t ${{ secrets.REGISTRY_USER }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }} -<<EOF
             FROM busybox
             RUN echo "hello world"
             EOF
@@ -58,9 +58,9 @@ jobs:
         id: push
         uses: ./
         with:
-          image: ${{ env.IMAGE_NAME }}
+          image: ${{ secrets.REGISTRY_USER }}/${{ env.IMAGE_NAME }}
           tags: ${{ env.IMAGE_TAG }}
-          registry: ${{ env.IMAGE_REGISTRY }}/${{ secrets.REGISTRY_USER }}
+          registry: ${{ env.IMAGE_REGISTRY }}
           username: ${{ secrets.REGISTRY_USER }}
           password: ${{ secrets.REGISTRY_PASSWORD }}
 
