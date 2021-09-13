@@ -32,7 +32,7 @@ jobs:
       - name: Install latest podman
         if: matrix.install_latest
         run: |
-          bash push-to-registry/.github/install_latest_podman.sh
+          bash .github/install_latest_podman.sh
 
       # Build image using Buildah action
       - name: Build Image
