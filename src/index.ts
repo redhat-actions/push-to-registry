@@ -242,7 +242,7 @@ async function run(): Promise<void> {
 
 async function pullImageFromDocker(): Promise<ImageStorageCheckResult> {
     core.info(`🔍 Checking if "${imageToPush}" with tag${tagsList.length !== 1 ? "s" : ""} `
-    + `"${tagsList.join(", ")}" is present in Docker image storage`);
+    + `"${tagsList.join(", ")}" is present in the local Docker image storage`);
     let imageWithTag;
     const foundTags: string[] = [];
     const missingTags: string[] = [];
@@ -275,7 +275,7 @@ async function pullImageFromDocker(): Promise<ImageStorageCheckResult> {
 async function checkImageInPodman(): Promise<ImageStorageCheckResult> {
     // check if images exist in Podman's storage
     core.info(`🔍 Checking if "${imageToPush}" with tag${tagsList.length !== 1 ? "s" : ""} `
-    + `"${tagsList.join(", ")}" is present in Podman image storage`);
+    + `"${tagsList.join(", ")}" is present in the local Podman image storage`);
     let imageWithTag;
     const foundTags: string[] = [];
     const missingTags: string[] = [];
