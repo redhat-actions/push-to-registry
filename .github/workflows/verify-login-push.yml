@@ -9,8 +9,9 @@ on:
     - cron: '0 0 * * *'  # every day at midnight
 
 env:
-  IMAGE_NAME: myimage
   IMAGE_REGISTRY: quay.io
+  IMAGE_NAMESPACE: redhat-github-actions
+  IMAGE_NAME: myimage
   IMAGE_TAGS: v1 ${{ github.sha }}
 
 jobs:
@@ -66,7 +67,7 @@ jobs:
         with:
           image: ${{ steps.build_image.outputs.image }}
           tags: ${{ steps.build_image.outputs.tags }}
-          registry: ${{ env.IMAGE_REGISTRY }}/${{ secrets.REGISTRY_USER }}
+          registry: ${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_NAMESPACE }}
           extra-args: |
             --disable-content-trust
 
