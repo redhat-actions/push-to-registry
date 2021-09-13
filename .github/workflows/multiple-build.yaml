@@ -8,7 +8,7 @@ on:
 env:
   IMAGE_REGISTRY: quay.io
   IMAGE_NAMESPACE: redhat-github-actions
-  IMAGE_NAME: myimage
+  IMAGE_NAME: ptr-test
   IMAGE_TAG: v1
 
 jobs:
