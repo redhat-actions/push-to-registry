@@ -10,8 +10,9 @@ on:
 
 env:
   PROJECT_DIR: spring-petclinic
-  IMAGE_NAME: spring-petclinic
   IMAGE_REGISTRY: quay.io
+  IMAGE_NAMESPACE: redhat-github-actions
+  IMAGE_NAME: spring-petclinic
   IMAGE_TAGS: v1 ${{ github.sha }}
   MVN_REPO_DIR: ~/.m2/repository
 
@@ -104,7 +105,7 @@ jobs:
         with:
           image: ${{ steps.build_image.outputs.image }}
           tags: ${{ steps.build_image.outputs.tags }}
-          registry: ${{ env.IMAGE_REGISTRY }}/${{ secrets.REGISTRY_USER }}
+          registry: ${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_NAMESPACE }}
           username: ${{ secrets.REGISTRY_USER }}
           password: ${{ secrets.REGISTRY_PASSWORD }}
           extra-args: |
