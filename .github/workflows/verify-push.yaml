@@ -9,10 +9,9 @@ on:
     - cron: '0 0 * * *'  # every day at midnight
 
 env:
-  PROJECT_DIR: spring-petclinic
   IMAGE_REGISTRY: quay.io
   IMAGE_NAMESPACE: redhat-github-actions
-  IMAGE_NAME: spring-petclinic
+  IMAGE_NAME: ptr-test
   IMAGE_TAGS: v1 ${{ github.sha }}
   MVN_REPO_DIR: ~/.m2/repository
 
@@ -26,59 +25,14 @@ jobs:
         install_latest: [ true, false ]
 
     steps:
-
       # Checkout push-to-registry action github repository
       - name: Checkout Push to Registry action
         uses: actions/checkout@v2
-        with:
-          path: "push-to-registry"
 
       - name: Install latest podman
         if: matrix.install_latest
         run: |
           bash push-to-registry/.github/install_latest_podman.sh
-
-      # Checkout spring-petclinic github repository
-      - name: Checkout spring-petclinic project
-        uses: actions/checkout@v2
-        with:
-          repository: "spring-projects/spring-petclinic"
-          path: ${{ env.PROJECT_DIR }}
-
-      # If none of these files has changed, we assume that the contents of
-      # .m2/repository can be fetched from the cache.
-      - name: Hash Maven files
-        working-directory: ${{ env.PROJECT_DIR }}
-        run: |
-          echo "MVN_HASH=${{ hashFiles('**/pom.xml', '.mvn/**/*', 'mvnw*') }}" >> $GITHUB_ENV
-
-      # Download the m2 repository from the cache to speed up the build.
-      - name: Check for Maven cache
-        id: check-mvn-cache
-        uses: actions/cache@v2
-        with:
-          path: ${{ env.MVN_REPO_DIR }}
-          key: ${{ env.MVN_HASH }}
-
-      # Setup java.
-      - name: Setup Java
-        uses: actions/setup-java@v1
-        with:
-          java-version: 11
-
-      # Run maven to build the project
-      - name: Maven
-        working-directory: ${{ env.PROJECT_DIR }}
-        run: |
-          mvn package -ntp -B
-
-       # If there was no cache hit above, store the output into the cache now.
-      - name: Save Maven repo into cache
-        if: ${{ steps.check-mvn-cache.outputs.cache-hit }} != 'true'
-        uses: actions/cache@v2
-        with:
-          path: ${{ env.MVN_REPO_DIR }}
-          key: ${{ env.MVN_HASH }}
 
       # Build image using Buildah action
       - name: Build Image
@@ -87,20 +41,16 @@ jobs:
         with:
           image: ${{ env.IMAGE_NAME }}
           tags: ${{ env.IMAGE_TAGS }}
-          base-image: 'registry.access.redhat.com/openjdk/openjdk-11-rhel7'
-          # To avoid hardcoding a particular version of the binary.
-          content: |
-            ./spring-petclinic/target/spring-petclinic-*.jar
+          base-image: busybox:latest
           entrypoint: |
-            java
-            -jar
-            spring-petclinic-*.jar
-          port: 8080
-          oci: 'true'
+            bash
+            -c
+            echo 'hello world'
+          oci: true
 
       # Push the image to Quay.io (Image Registry)
       - name: Push To Quay
-        uses: ./push-to-registry/
+        uses: ./
         id: push
         with:
           image: ${{ steps.build_image.outputs.image }}
