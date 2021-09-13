@@ -19,20 +19,16 @@ jobs:
       matrix:
         install_latest: [ true, false ]
 
-
     steps:
+
+      # Checkout push-to-registry action github repository
+      - name: Checkout Push to Registry action
+        uses: actions/checkout@v2
+
       - name: Install latest podman
         if: matrix.install_latest
-        # https://podman.io/getting-started/installation
         run: |
-          . /etc/os-release
-          echo "deb https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_${VERSION_ID}/ /" | sudo tee /etc/apt/sources.list.d/devel:kubic:libcontainers:stable.list
-          curl -sSfL "https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_${VERSION_ID}/Release.key" | sudo apt-key add -
-          sudo apt-get update
-          sudo apt-get -y upgrade
-          sudo apt-get -y install podman
-
-      - uses: actions/checkout@v2
+          bash .github/install_latest_podman.sh
 
       - name: Build image using Podman
         run: |
@@ -64,18 +60,15 @@ jobs:
         install_latest: [ true, false ]
 
     steps:
+
+      # Checkout push-to-registry action github repository
+      - name: Checkout Push to Registry action
+        uses: actions/checkout@v2
+
       - name: Install latest podman
         if: matrix.install_latest
-        # https://podman.io/getting-started/installation
         run: |
-          . /etc/os-release
-          echo "deb https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_${VERSION_ID}/ /" | sudo tee /etc/apt/sources.list.d/devel:kubic:libcontainers:stable.list
-          curl -sSfL "https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_${VERSION_ID}/Release.key" | sudo apt-key add -
-          sudo apt-get update
-          sudo apt-get -y upgrade
-          sudo apt-get -y install podman
-
-      - uses: actions/checkout@v2
+          bash .github/install_latest_podman.sh
 
       - name: Build image using Docker
         run: |
@@ -107,18 +100,15 @@ jobs:
         install_latest: [ true, false ]
 
     steps:
+
+      # Checkout push-to-registry action github repository
+      - name: Checkout Push to Registry action
+        uses: actions/checkout@v2
+
       - name: Install latest podman
         if: matrix.install_latest
-        # https://podman.io/getting-started/installation
         run: |
-          . /etc/os-release
-          echo "deb https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_${VERSION_ID}/ /" | sudo tee /etc/apt/sources.list.d/devel:kubic:libcontainers:stable.list
-          curl -sSfL "https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_${VERSION_ID}/Release.key" | sudo apt-key add -
-          sudo apt-get update
-          sudo apt-get -y upgrade
-          sudo apt-get -y install podman
-
-      - uses: actions/checkout@v2
+          bash .github/install_latest_podman.sh
 
       - name: Build image using Docker
         run: |
@@ -157,18 +147,15 @@ jobs:
         install_latest: [ true, false ]
 
     steps:
+
+      # Checkout push-to-registry action github repository
+      - name: Checkout Push to Registry action
+        uses: actions/checkout@v2
+
       - name: Install latest podman
         if: matrix.install_latest
-        # https://podman.io/getting-started/installation
         run: |
-          . /etc/os-release
-          echo "deb https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_${VERSION_ID}/ /" | sudo tee /etc/apt/sources.list.d/devel:kubic:libcontainers:stable.list
-          curl -sSfL "https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_${VERSION_ID}/Release.key" | sudo apt-key add -
-          sudo apt-get update
-          sudo apt-get -y upgrade
-          sudo apt-get -y install podman
-
-      - uses: actions/checkout@v2
+          bash .github/install_latest_podman.sh
 
       - name: Build image using Podman
         run: |
