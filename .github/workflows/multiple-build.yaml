@@ -82,7 +82,7 @@ jobs:
         id: push
         uses: ./
         with:
-          image: ${{ secrets.REGISTRY_USER }}
+          image: ${{ env.IMAGE_NAME }}
           tags: ${{ env.IMAGE_TAG }}
           registry: ${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_NAMESPACE }}
           username: ${{ secrets.REGISTRY_USER }}
