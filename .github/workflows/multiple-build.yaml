@@ -14,9 +14,21 @@ jobs:
   build-only-podman:
     name: Build and push image built only on Podman
     runs-on: ubuntu-20.04
+    strategy:
+      fail-fast: false
+      matrix:
+        install_latest: [ true, false ]
 
     steps:
-      - uses: actions/checkout@v2
+
+      # Checkout push-to-registry action github repository
+      - name: Checkout Push to Registry action
+        uses: actions/checkout@v2
+
+      - name: Install latest podman
+        if: matrix.install_latest
+        run: |
+          bash .github/install_latest_podman.sh
 
       - name: Build image using Podman
         run: |
@@ -42,9 +54,21 @@ jobs:
   build-only-docker:
     name: Build and push image built only on Docker
     runs-on: ubuntu-18.04
+    strategy:
+      fail-fast: false
+      matrix:
+        install_latest: [ true, false ]
 
     steps:
-      - uses: actions/checkout@v2
+
+      # Checkout push-to-registry action github repository
+      - name: Checkout Push to Registry action
+        uses: actions/checkout@v2
+
+      - name: Install latest podman
+        if: matrix.install_latest
+        run: |
+          bash .github/install_latest_podman.sh
 
       - name: Build image using Docker
         run: |
@@ -70,9 +94,21 @@ jobs:
   build-podman-latest:
     name: Build and push image built latest on Podman
     runs-on: ubuntu-18.04
+    strategy:
+      fail-fast: false
+      matrix:
+        install_latest: [ true, false ]
 
     steps:
-      - uses: actions/checkout@v2
+
+      # Checkout push-to-registry action github repository
+      - name: Checkout Push to Registry action
+        uses: actions/checkout@v2
+
+      - name: Install latest podman
+        if: matrix.install_latest
+        run: |
+          bash .github/install_latest_podman.sh
 
       - name: Build image using Docker
         run: |
@@ -105,9 +141,21 @@ jobs:
   build-docker-latest:
     name: Build and push image built latest on Docker
     runs-on: ubuntu-18.04
+    strategy:
+      fail-fast: false
+      matrix:
+        install_latest: [ true, false ]
 
     steps:
-      - uses: actions/checkout@v2
+
+      # Checkout push-to-registry action github repository
+      - name: Checkout Push to Registry action
+        uses: actions/checkout@v2
+
+      - name: Install latest podman
+        if: matrix.install_latest
+        run: |
+          bash .github/install_latest_podman.sh
 
       - name: Build image using Podman
         run: |
