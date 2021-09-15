@@ -1,5 +1,10 @@
 # push-to-registry Changelog
 
+## v2.3.2
+- Add the word `local` to the image check messages.
+- Add matrix to install latest podman. (Internal)
+- Simplify push tests. (Internal)
+
 ## v2.3.1
 - Fix issue if image is present in docker storage and it's name has '/' in it.
 - Fix outputs `registry_path` and `registry_paths` not consisting of image tag.
