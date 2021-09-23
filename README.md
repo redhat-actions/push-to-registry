@@ -107,7 +107,7 @@ If the action pulled an image from the Docker image storage into the Podman stor
 ## Note about GitHub runners and Podman
 We recommend using `runs-on: ubuntu-20.04` since it has a newer version of Podman.
 
-If you are on `ubuntu-18.04` (which is currently aliased to [`ubuntu-latest`](https://github.com/actions/virtual-environments/issues/1816)) your workflow will use an older version of Podman and may encounter issues such as [#26](https://github.com/redhat-actions/push-to-registry/issues/26).
+If you are on `ubuntu-18.04` or any other older versions of ubuntu your workflow will use an older version of Podman and may encounter issues such as [#26](https://github.com/redhat-actions/push-to-registry/issues/26).
 
 ## Troubleshooting
 Note that quay.io repositories are private by default.<br>
