@@ -1,10 +1,12 @@
 # push-to-registry
 
 [![CI checks](https://github.com/redhat-actions/push-to-registry/workflows/CI%20checks/badge.svg)](https://github.com/redhat-actions/push-to-registry/actions?query=workflow%3A%22CI+checks%22)
-[![Build and Push](https://github.com/redhat-actions/push-to-registry/workflows/Build%20and%20Push/badge.svg)](https://github.com/redhat-actions/push-to-registry/actions?query=workflow%3A%22Build+and+Push%22)
+[![Link checker](https://github.com/redhat-actions/push-to-registry/workflows/Link%20checker/badge.svg)](https://github.com/redhat-actions/push-to-registry/actions?query=workflow%3A%22Link+checker%22)
+<br><br>
+[![Push to Quay.io](https://github.com/redhat-actions/push-to-registry/actions/workflows/quay-push.yaml/badge.svg)](https://github.com/redhat-actions/push-to-registry/actions/workflows/quay-push.yaml)
+[![Push to GHCR](https://github.com/redhat-actions/push-to-registry/actions/workflows/ghcr-push.yaml/badge.svg)](https://github.com/redhat-actions/push-to-registry/actions/workflows/ghcr-push.yaml)
 [![Login and Push](https://github.com/redhat-actions/push-to-registry/workflows/Login%20and%20Push/badge.svg)](https://github.com/redhat-actions/push-to-registry/actions?query=workflow%3A%22Login+and+Push%22)
 [![Multiple container CLI build tests](https://github.com/redhat-actions/push-to-registry/workflows/Multiple%20container%20CLI%20build%20tests/badge.svg)](https://github.com/redhat-actions/push-to-registry/actions?query=workflow%3A%22Multiple+container+CLI+build+tests%22)
-[![Link checker](https://github.com/redhat-actions/push-to-registry/workflows/Link%20checker/badge.svg)](https://github.com/redhat-actions/push-to-registry/actions?query=workflow%3A%22Link+checker%22)
 <br><br>
 [![tag badge](https://img.shields.io/github/v/tag/redhat-actions/push-to-registry)](https://github.com/redhat-actions/push-to-registry/tags)
 [![license badge](https://img.shields.io/github/license/redhat-actions/push-to-registry)](./LICENSE)
@@ -94,7 +96,7 @@ jobs:
       run: echo "Image pushed to ${{ steps.push-to-quay.outputs.registry-paths }}"
 ```
 
-Refer to [examples](./.github/workflows/verify-push.yaml) for complete example of push to [GitHub Container Registry (GHCR)](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry).
+Refer to [GHCR push example](./.github/workflows/ghcr-push.yaml) for complete example of push to [GitHub Container Registry (GHCR)](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry).
 
 ## Note about images built with Docker
 
