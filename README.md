@@ -94,6 +94,8 @@ jobs:
       run: echo "Image pushed to ${{ steps.push-to-quay.outputs.registry-paths }}"
 ```
 
+Refer to [examples](./.github/workflows/verify-push.yaml) for complete example of push to [GitHub Container Registry (GHCR)](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry).
+
 ## Note about images built with Docker
 
 This action uses `Podman` to push, but can also push images built with `Docker`. However, Docker and Podman store their images in different locations, and Podman can only push images in its own storage.
