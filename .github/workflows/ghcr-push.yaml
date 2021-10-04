@@ -1,23 +1,22 @@
 # This workflow will perform a test whenever there
 # is some change in code done to ensure that the changes
 # are not buggy and we are getting the desired output.
-name: Build and Push
+name: Push to GHCR
 on:
   push:
   workflow_dispatch:
   schedule:
     - cron: '0 0 * * *'  # every day at midnight
-
 env:
-  IMAGE_REGISTRY: quay.io
-  IMAGE_NAMESPACE: redhat-github-actions
-  IMAGE_NAME: ptr-test
-  IMAGE_TAGS: v1 ${{ github.sha }}
-  MVN_REPO_DIR: ~/.m2/repository
+    IMAGE_NAME: ptr-test
+    IMAGE_TAGS: v1 ${{ github.sha }}
+    IMAGE_REGISTRY: ghcr.io/${{ github.repository_owner }}
+    REGISTRY_USER: ${{ github.actor }}
+    REGISTRY_PASSWORD: ${{ github.token }}
 
 jobs:
-  build-and-push:
-    name: Build and push image to Quay.io
+  push-ghcr:
+    name: Build and push image
     runs-on: ubuntu-20.04
     strategy:
       fail-fast: false
@@ -48,16 +47,16 @@ jobs:
             echo 'hello world'
           oci: true
 
-      # Push the image to Quay.io (Image Registry)
-      - name: Push To Quay
+      # Push the image to GHCR (Image Registry)
+      - name: Push To GHCR
         uses: ./
         id: push
         with:
           image: ${{ steps.build_image.outputs.image }}
           tags: ${{ steps.build_image.outputs.tags }}
-          registry: ${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_NAMESPACE }}
-          username: ${{ secrets.REGISTRY_USER }}
-          password: ${{ secrets.REGISTRY_PASSWORD }}
+          registry: ${{ env.IMAGE_REGISTRY }}
+          username: ${{ env.REGISTRY_USER }}
+          password: ${{ env.REGISTRY_PASSWORD }}
           extra-args: |
             --disable-content-trust
 
