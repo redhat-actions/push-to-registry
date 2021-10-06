@@ -17,7 +17,7 @@ export enum Inputs {
     EXTRA_ARGS = "extra-args",
     /**
      * Name of the image to push (e.g. username/imagename or imagename)
-     * Required: true
+     * Required: false
      * Default: None.
      */
     IMAGE = "image",
@@ -29,12 +29,12 @@ export enum Inputs {
     PASSWORD = "password",
     /**
      * Hostname and optional namespace to push the image to (eg. quay.io/username or quay.io)
-     * Required: true
+     * Required: false
      * Default: None.
      */
     REGISTRY = "registry",
     /**
-     * The tag or tags of the image to push. For multiple tags, seperate by a space. For example, "latest v1"
+     * The tag or tags of the image to push. For multiple tags, seperate by whitespace. For example, "latest v1"
      * Required: false
      * Default: "latest"
      */
