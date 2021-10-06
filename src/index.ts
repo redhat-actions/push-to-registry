@@ -3,7 +3,7 @@ import * as exec from "@actions/exec";
 import * as io from "@actions/io";
 import * as fs from "fs";
 import * as path from "path";
-import { splitByNewline } from "./util";
+import { splitByNewline, isFullImageName, getFullImageName } from "./util";
 import { Inputs, Outputs } from "./generated/inputs-outputs";
 
 interface ExecResult {
@@ -21,8 +21,8 @@ let podmanPath: string | undefined;
 
 // boolean value to check if pushed image is from Docker image storage
 let isImageFromDocker = false;
-let imageToPush: string;
-let tagsList: string[];
+let sourceImages: string[];
+let destinationImages: string[];
 let dockerBaseUrl: string;
 
 async function getPodmanPath(): Promise<string> {
@@ -40,10 +40,10 @@ const DOCKER_IO_NAMESPACED = DOCKER_IO + `/library`;
 
 async function run(): Promise<void> {
     const DEFAULT_TAG = "latest";
-    const imageInput = core.getInput(Inputs.IMAGE, { required: true });
+    const imageInput = core.getInput(Inputs.IMAGE);
     const tags = core.getInput(Inputs.TAGS);
     // split tags
-    tagsList = tags.split(" ");
+    const tagsList = tags.trim().split(/\s+/);
 
     // handle the case when image name is 'namespace/imagename' and image is present in docker storage
     dockerBaseUrl = imageInput.indexOf("/") > -1 ? DOCKER_IO : DOCKER_IO_NAMESPACED;
@@ -53,11 +53,42 @@ async function run(): Promise<void> {
         core.info(`Input "${Inputs.TAGS}" is not provided, using default tag "${DEFAULT_TAG}"`);
         tagsList.push(DEFAULT_TAG);
     }
-    const registry = core.getInput(Inputs.REGISTRY, { required: true });
+    const registry = core.getInput(Inputs.REGISTRY);
     const username = core.getInput(Inputs.USERNAME);
     const password = core.getInput(Inputs.PASSWORD);
     const tlsVerify = core.getInput(Inputs.TLS_VERIFY);
     const digestFileInput = core.getInput(Inputs.DIGESTFILE);
+
+    // check if all tags provided are in `image:tag` format
+    const isFullImageNameTag = isFullImageName(tagsList[0]);
+    if (tagsList.some((tag) => isFullImageName(tag) !== isFullImageNameTag)) {
+        throw new Error(`Input "${Inputs.TAGS}" cannot have a mix of full name and non full name tags`);
+    }
+    if (!isFullImageNameTag) {
+        if (!imageInput) {
+            throw new Error(`Input "${Inputs.IMAGE}" must be provided when using non full name tags`);
+        }
+        if (!registry) {
+            throw new Error(`Input "${Inputs.REGISTRY}" must be provided when using non full name tags`);
+        }
+
+        const registryWithoutTrailingSlash = registry.replace(/\/$/, "");
+        const registryPath = `${registryWithoutTrailingSlash}/${imageInput}`;
+        core.info(`Combining image name "${imageInput}" and registry "${registry}" `
+            + `to form registry path "${registryPath}"`);
+        if (imageInput.indexOf("/") > -1 && registry.indexOf("/") > -1) {
+            core.warning(`"${registryPath}" does not seem to be a valid registry path. `
+            + `The registry path should not contain more than 2 slashes. `
+            + `Refer to the Inputs section of the readme for naming image and registry.`);
+        }
+
+        sourceImages = tagsList.map((tag) => getFullImageName(imageInput, tag));
+        destinationImages = tagsList.map((tag) => getFullImageName(registryPath, tag));
+    }
+    else {
+        sourceImages = tagsList;
+        destinationImages = tagsList;
+    }
 
     const inputExtraArgsStr = core.getInput(Inputs.EXTRA_ARGS);
     let podmanExtraArgs: string[] = [];
@@ -68,7 +99,6 @@ async function run(): Promise<void> {
         podmanExtraArgs = lines.flatMap((line) => line.split(" ")).map((arg) => arg.trim());
     }
 
-    imageToPush = `${imageInput}`;
     const registryPathList: string[] = [];
 
     // check if image with all the required tags exist in Podman image storage
@@ -79,13 +109,13 @@ async function run(): Promise<void> {
 
     if (podmanFoundTags.length > 0) {
         core.info(`Tag${podmanFoundTags.length !== 1 ? "s" : ""} "${podmanFoundTags.join(", ")}" `
-        + `of "${imageToPush}" found in Podman image storage`);
+        + `found in Podman image storage`);
     }
 
     // Log warning if few tags are not found
     if (podmanMissingTags.length > 0 && podmanFoundTags.length > 0) {
         core.warning(`Tag${podmanMissingTags.length !== 1 ? "s" : ""} "${podmanMissingTags.join(", ")}" `
-        + `of "${imageToPush}" not found in Podman image storage`);
+        + `not found in Podman image storage`);
     }
 
     // check if image with all the required tags exist in Docker image storage
@@ -97,19 +127,19 @@ async function run(): Promise<void> {
 
     if (dockerFoundTags.length > 0) {
         core.info(`Tag${dockerFoundTags.length !== 1 ? "s" : ""} "${dockerFoundTags.join(", ")}" `
-        + `of "${imageToPush}" found in Docker image storage`);
+        + `found in Docker image storage`);
     }
 
     // Log warning if few tags are not found
     if (dockerMissingTags.length > 0 && dockerFoundTags.length > 0) {
         core.warning(`Tag${dockerMissingTags.length !== 1 ? "s" : ""} "${dockerMissingTags.join(", ")}" `
-        + `of "${imageToPush}" not found in Docker image storage`);
+        + `not found in Docker image storage`);
     }
 
     // failing if image with any of the tag is not found in Docker as well as Podman
     if (podmanMissingTags.length > 0 && dockerMissingTags.length > 0) {
         throw new Error(
-            `❌ All tags for "${imageToPush}" were not found in either Podman image storage, or Docker image storage. `
+            `❌ All tags were not found in either Podman image storage, or Docker image storage. `
             + `Tag${podmanMissingTags.length !== 1 ? "s" : ""} "${podmanMissingTags.join(", ")}" `
             + `not found in Podman image storage, and tag${dockerMissingTags.length !== 1 ? "s" : ""} `
             + `"${dockerMissingTags.join(", ")}" not found in Docker image storage.`
@@ -123,25 +153,29 @@ async function run(): Promise<void> {
         const isPodmanImageLatest = await isPodmanLocalImageLatest();
         if (!isPodmanImageLatest) {
             core.warning(
-                `The version of "${imageToPush}" in the Docker image storage is more recent `
+                `The version of "${sourceImages[0]}" in the Docker image storage is more recent `
                     + `than the version in the Podman image storage. The image(s) from the Docker image storage `
                     + `will be pushed.`
             );
-            imageToPush = `${dockerBaseUrl}/${imageToPush}`;
+            if (!isFullImageNameTag) {
+                sourceImages = sourceImages.map((image) => `${dockerBaseUrl}/${image}`);
+            }
             isImageFromDocker = true;
         }
         else {
             core.warning(
-                `The version of "${imageToPush}" in the Podman image storage is more recent `
+                `The version of "${sourceImages[0]}" in the Podman image storage is more recent `
                     + `than the version in the Docker image storage. The image(s) from the Podman image `
                     + `storage will be pushed.`
             );
         }
     }
     else if (allTagsinDocker) {
-        imageToPush = `${dockerBaseUrl}/${imageToPush}`;
+        if (!isFullImageNameTag) {
+            sourceImages = sourceImages.map((image) => `${dockerBaseUrl}/${image}`);
+        }
         core.info(
-            `"${imageToPush}" was found in the Docker image storage, but not in the Podman `
+            `"${sourceImages[0]}" was found in the Docker image storage, but not in the Podman `
                 + `image storage. The image(s) will be pulled into Podman image storage, pushed, and then `
                 + `removed from the Podman image storage.`
         );
@@ -149,13 +183,12 @@ async function run(): Promise<void> {
     }
     else {
         core.info(
-            `"${imageToPush}" was found in the Podman image storage, but not in the Docker `
+            `"${sourceImages[0]}" was found in the Podman image storage, but not in the Docker `
                 + `image storage. The image(s) will be pushed from Podman image storage.`
         );
     }
 
-    let pushMsg = `⏳ Pushing "${imageToPush}" with tag${tagsList.length !== 1 ? "s" : ""} `
-    + `"${tagsList.join(", ")}" to "${registry}"`;
+    let pushMsg = `⏳ Pushing "${sourceImages[0]}" to ${destinationImages.map((image) => `"${image}"`).join(", ")}`;
     if (username) {
         pushMsg += ` as "${username}"`;
     }
@@ -173,36 +206,22 @@ async function run(): Promise<void> {
     }
 
     let digestFile = digestFileInput;
-    const imageNameWithTag = `${imageToPush}:${tagsList[0]}`;
     if (!digestFile) {
-        digestFile = `${imageNameWithTag.replace(
+        digestFile = `${sourceImages[0].replace(
             /[/\\/?%*:|"<>]/g,
             "-",
         )}_digest.txt`;
     }
 
-    const registryWithoutTrailingSlash = registry.replace(/\/$/, "");
-    const registryPath = `${registryWithoutTrailingSlash}/${imageInput}`;
-    core.info(`Combining image name "${imageInput}" and registry "${registry}" `
-    + `to form registry path "${registryPath}"`);
-
-    if (imageInput.indexOf("/") > -1 && registry.indexOf("/") > -1) {
-        core.warning(`"${registryPath}" does not seem to be a valid registry path. `
-        + `The registry path should not contain more than 2 slashes. `
-        + `Refer to the Inputs section of the readme for naming image and registry.`);
-    }
-
     // push the image
-    for (const tag of tagsList) {
-        const imageWithTag = `${imageToPush}:${tag}`;
-        const registryPathWithTag = `${registryPath}:${tag}`;
+    for (const destinationImage of destinationImages) {
         const args = [
             "push",
             "--quiet",
             "--digestfile",
             digestFile,
-            imageWithTag,
-            registryPathWithTag,
+            sourceImages[0],
+            destinationImage,
         ];
 
         if (podmanExtraArgs.length > 0) {
@@ -220,9 +239,9 @@ async function run(): Promise<void> {
         }
 
         await execute(await getPodmanPath(), args);
-        core.info(`✅ Successfully pushed "${imageWithTag}" to "${registryPathWithTag}"`);
+        core.info(`✅ Successfully pushed "${sourceImages[0]}" to "${destinationImage}"`);
 
-        registryPathList.push(registryPathWithTag);
+        registryPathList.push(destinationImage);
 
         try {
             const digest = (await fs.promises.readFile(digestFile)).toString();
@@ -241,24 +260,21 @@ async function run(): Promise<void> {
 }
 
 async function pullImageFromDocker(): Promise<ImageStorageCheckResult> {
-    core.info(`🔍 Checking if "${imageToPush}" with tag${tagsList.length !== 1 ? "s" : ""} `
-    + `"${tagsList.join(", ")}" is present in the local Docker image storage`);
-    let imageWithTag;
+    core.info(`🔍 Checking if "${sourceImages.join(",")}" present in the local Docker image storage`);
     const foundTags: string[] = [];
     const missingTags: string[] = [];
     try {
-        for (const tag of tagsList) {
-            imageWithTag = `${imageToPush}:${tag}`;
+        for (const imageWithTag of sourceImages) {
             const commandResult: ExecResult = await execute(
                 await getPodmanPath(),
                 [ "pull", `docker-daemon:${imageWithTag}` ],
                 { ignoreReturnCode: true, failOnStdErr: false, group: true }
             );
             if (commandResult.exitCode === 0) {
-                foundTags.push(tag);
+                foundTags.push(imageWithTag);
             }
             else {
-                missingTags.push(tag);
+                missingTags.push(imageWithTag);
             }
         }
     }
@@ -274,24 +290,21 @@ async function pullImageFromDocker(): Promise<ImageStorageCheckResult> {
 
 async function checkImageInPodman(): Promise<ImageStorageCheckResult> {
     // check if images exist in Podman's storage
-    core.info(`🔍 Checking if "${imageToPush}" with tag${tagsList.length !== 1 ? "s" : ""} `
-    + `"${tagsList.join(", ")}" is present in the local Podman image storage`);
-    let imageWithTag;
+    core.info(`🔍 Checking if "${sourceImages.join(",")}" present in the local Podman image storage`);
     const foundTags: string[] = [];
     const missingTags: string[] = [];
     try {
-        for (const tag of tagsList) {
-            imageWithTag = `${imageToPush}:${tag}`;
+        for (const imageWithTag of sourceImages) {
             const commandResult: ExecResult = await execute(
                 await getPodmanPath(),
                 [ "image", "exists", imageWithTag ],
                 { ignoreReturnCode: true }
             );
             if (commandResult.exitCode === 0) {
-                foundTags.push(tag);
+                foundTags.push(imageWithTag);
             }
             else {
-                missingTags.push(tag);
+                missingTags.push(imageWithTag);
             }
         }
     }
@@ -308,7 +321,13 @@ async function checkImageInPodman(): Promise<ImageStorageCheckResult> {
 async function isPodmanLocalImageLatest(): Promise<boolean> {
     // checking for only one tag as creation time will be
     // same for all the tags present
-    const imageWithTag = `${imageToPush}:${tagsList[0]}`;
+    const imageWithTag = sourceImages[0];
+
+    // do not check if full name is specified as image pulled from docker
+    // will not have a different name
+    if (isFullImageName(imageWithTag)) {
+        return true;
+    }
 
     // get creation time of the image present in the Podman image storage
     const podmanLocalImageTimeStamp = await execute(await getPodmanPath(), [
@@ -339,12 +358,9 @@ async function isPodmanLocalImageLatest(): Promise<boolean> {
 
 // remove the pulled image from the Podman image storage
 async function removeDockerImage(): Promise<void> {
-    if (imageToPush) {
-        core.info(`Removing "${imageToPush}" from the Podman image storage`);
-        for (const tag of tagsList) {
-            const imageWithTag = `${imageToPush}:${tag}`;
-            await execute(await getPodmanPath(), [ "rmi", imageWithTag ]);
-        }
+    core.info(`Removing "${sourceImages[0]}" from the Podman image storage`);
+    for (const imageWithTag of sourceImages) {
+        await execute(await getPodmanPath(), [ "rmi", imageWithTag ]);
     }
 }
 

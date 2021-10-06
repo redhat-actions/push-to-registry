@@ -7,14 +7,14 @@ branding:
 inputs:
   image:
     description: 'Name of the image to push (e.g. username/imagename or imagename)'
-    required: true
+    required: false
   tags:
     description: 'The tag or tags of the image to push. For multiple tags, seperate by a space. For example, "latest v1"'
     required: false
     default: 'latest'
   registry:
     description: 'Hostname and optional namespace to push the image to (eg. quay.io/username or quay.io)'
-    required: true
+    required: false
   username:
     description: 'Username to use as credential to authenticate to the registry'
     required: false

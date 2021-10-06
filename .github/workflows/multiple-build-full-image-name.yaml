@@ -1,0 +1,182 @@
+name: Multiple container CLI build tests with full image name tags
+on:
+  push:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 0 * * *'  # every day at midnight
+
+env:
+  IMAGE_REGISTRY: quay.io
+  IMAGE_NAMESPACE: redhat-github-actions
+  IMAGE_TAG: quay.io/redhat-github-actions/ptr-test:v1
+
+jobs:
+  build-only-podman:
+    name: Build and push image built only on Podman
+    runs-on: ubuntu-20.04
+    strategy:
+      fail-fast: false
+      matrix:
+        install_latest: [ true, false ]
+
+    steps:
+
+      # Checkout push-to-registry action github repository
+      - name: Checkout Push to Registry action
+        uses: actions/checkout@v2
+
+      - name: Install latest podman
+        if: matrix.install_latest
+        run: |
+          bash .github/install_latest_podman.sh
+
+      - name: Build image using Podman
+        run: |
+            podman build -t ${{ env.IMAGE_TAG }} -<<EOF
+            FROM busybox
+            RUN echo "hello world"
+            EOF
+
+      - name: Push image to ${{ env.IMAGE_REGISTRY }}
+        id: push
+        uses: ./
+        with:
+          tags: ${{ env.IMAGE_TAG }}
+          registry: ${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_NAMESPACE }}
+          username: ${{ secrets.REGISTRY_USER }}
+          password: ${{ secrets.REGISTRY_PASSWORD }}
+
+      - name: Echo outputs
+        run: |
+          echo "${{ toJSON(steps.push.outputs) }}"
+
+  build-only-docker:
+    name: Build and push image built only on Docker
+    runs-on: ubuntu-20.04
+    strategy:
+      fail-fast: false
+      matrix:
+        install_latest: [ true, false ]
+
+    steps:
+
+      # Checkout push-to-registry action github repository
+      - name: Checkout Push to Registry action
+        uses: actions/checkout@v2
+
+      - name: Install latest podman
+        if: matrix.install_latest
+        run: |
+          bash .github/install_latest_podman.sh
+
+      - name: Build image using Docker
+        run: |
+            docker build -t ${{ env.IMAGE_TAG }} -<<EOF
+            FROM busybox
+            RUN echo "hello world"
+            EOF
+
+      - name: Push image to ${{ env.IMAGE_REGISTRY }}
+        id: push
+        uses: ./
+        with:
+          tags: ${{ env.IMAGE_TAG }}
+          registry: ${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_NAMESPACE }}
+          username: ${{ secrets.REGISTRY_USER }}
+          password: ${{ secrets.REGISTRY_PASSWORD }}
+
+      - name: Echo outputs
+        run: |
+          echo "${{ toJSON(steps.push.outputs) }}"
+
+  build-podman-latest:
+    name: Build and push image built latest on Podman
+    runs-on: ubuntu-20.04
+    strategy:
+      fail-fast: false
+      matrix:
+        install_latest: [ true, false ]
+
+    steps:
+
+      # Checkout push-to-registry action github repository
+      - name: Checkout Push to Registry action
+        uses: actions/checkout@v2
+
+      - name: Install latest podman
+        if: matrix.install_latest
+        run: |
+          bash .github/install_latest_podman.sh
+
+      - name: Build image using Docker
+        run: |
+            docker build -t ${{ env.IMAGE_TAG }} -<<EOF
+            FROM busybox
+            RUN echo "hello world"
+            EOF
+
+      - name: Build image using Podman
+        run: |
+            podman build -t ${{ env.IMAGE_TAG }} -<<EOF
+            FROM busybox
+            RUN echo "hello world"
+            EOF
+
+      - name: Push image to ${{ env.IMAGE_REGISTRY }}
+        id: push
+        uses: ./
+        with:
+          tags: ${{ env.IMAGE_TAG }}
+          registry: ${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_NAMESPACE }}
+          username: ${{ secrets.REGISTRY_USER }}
+          password: ${{ secrets.REGISTRY_PASSWORD }}
+
+      - name: Echo outputs
+        run: |
+          echo "${{ toJSON(steps.push.outputs) }}"
+
+  build-docker-latest:
+    name: Build and push image built latest on Docker
+    runs-on: ubuntu-20.04
+    strategy:
+      fail-fast: false
+      matrix:
+        install_latest: [ true, false ]
+
+    steps:
+
+      # Checkout push-to-registry action github repository
+      - name: Checkout Push to Registry action
+        uses: actions/checkout@v2
+
+      - name: Install latest podman
+        if: matrix.install_latest
+        run: |
+          bash .github/install_latest_podman.sh
+
+      - name: Build image using Podman
+        run: |
+            podman build -t ${{ env.IMAGE_TAG }} -<<EOF
+            FROM busybox
+            RUN echo "hello world"
+            EOF
+
+      - name: Build image using Docker
+        run: |
+            docker build -t ${{ env.IMAGE_TAG }} -<<EOF
+            FROM busybox
+            RUN echo "hello world"
+            EOF
+
+      - name: Push image to ${{ env.IMAGE_REGISTRY }}
+        id: push
+        uses: ./
+        with:
+          tags: ${{ env.IMAGE_TAG }}
+          registry: ${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_NAMESPACE }}
+          username: ${{ secrets.REGISTRY_USER }}
+          password: ${{ secrets.REGISTRY_PASSWORD }}
+
+      - name: Echo outputs
+        run: |
+          echo "${{ toJSON(steps.push.outputs) }}"
