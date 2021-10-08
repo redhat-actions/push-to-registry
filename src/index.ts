@@ -375,7 +375,7 @@ async function removeDockerPodmanImageStroage(): Promise<void> {
             core.info(`Removing temporary Podman image storage for pulling from Docker daemon`);
             await execute(
                 await getPodmanPath(),
-                [ ...dockerPodmanOpts, "system", "reset", "-f" ]
+                [ ...dockerPodmanOpts, "rmi", "-a", "-f" ]
             );
             await fs.promises.rmdir(dockerPodmanRoot, { recursive: true });
         }
