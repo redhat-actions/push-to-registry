@@ -169,7 +169,7 @@ async function run(): Promise<void> {
     }
     else if (allTagsinDocker) {
         core.info(
-            `"${sourceImages[0]}" was found in the Docker image storage, but not in the Podman `
+            `Tag "${sourceImages[0]}" was found in the Docker image storage, but not in the Podman `
                 + `image storage. The image(s) will be pulled into Podman image storage, pushed, and then `
                 + `removed from the Podman image storage.`
         );
@@ -177,7 +177,7 @@ async function run(): Promise<void> {
     }
     else {
         core.info(
-            `"${sourceImages[0]}" was found in the Podman image storage, but not in the Docker `
+            `Tag "${sourceImages[0]}" was found in the Podman image storage, but not in the Docker `
                 + `image storage. The image(s) will be pushed from Podman image storage.`
         );
     }
@@ -285,7 +285,7 @@ async function pullImageFromDocker(): Promise<ImageStorageCheckResult> {
 
 async function checkImageInPodman(): Promise<ImageStorageCheckResult> {
     // check if images exist in Podman's storage
-    core.info(`🔍 Checking if "${sourceImages.join(",")}" present in the local Podman image storage`);
+    core.info(`🔍 Checking if "${sourceImages.join(", ")}" present in the local Podman image storage`);
     const foundTags: string[] = [];
     const missingTags: string[] = [];
     try {
