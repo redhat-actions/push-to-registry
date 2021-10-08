@@ -2,8 +2,13 @@ import * as core from "@actions/core";
 import * as exec from "@actions/exec";
 import * as io from "@actions/io";
 import * as fs from "fs";
+import * as os from "os";
 import * as path from "path";
-import { splitByNewline, isFullImageName, getFullImageName } from "./util";
+import {
+    splitByNewline,
+    isFullImageName, getFullImageName,
+    getFullDockerImageName,
+} from "./util";
 import { Inputs, Outputs } from "./generated/inputs-outputs";
 
 interface ExecResult {
@@ -23,7 +28,7 @@ let podmanPath: string | undefined;
 let isImageFromDocker = false;
 let sourceImages: string[];
 let destinationImages: string[];
-let dockerBaseUrl: string;
+let dockerPodmanRoot: string;
 
 async function getPodmanPath(): Promise<string> {
     if (podmanPath == null) {
@@ -34,19 +39,12 @@ async function getPodmanPath(): Promise<string> {
     return podmanPath;
 }
 
-// base URL that gets appended if image is pulled from the Docker imaege storage
-const DOCKER_IO = `docker.io`;
-const DOCKER_IO_NAMESPACED = DOCKER_IO + `/library`;
-
 async function run(): Promise<void> {
     const DEFAULT_TAG = "latest";
     const imageInput = core.getInput(Inputs.IMAGE);
     const tags = core.getInput(Inputs.TAGS);
     // split tags
     const tagsList = tags.trim().split(/\s+/);
-
-    // handle the case when image name is 'namespace/imagename' and image is present in docker storage
-    dockerBaseUrl = imageInput.indexOf("/") > -1 ? DOCKER_IO : DOCKER_IO_NAMESPACED;
 
     // info message if user doesn't provides any tag
     if (tagsList.length === 0) {
@@ -157,9 +155,6 @@ async function run(): Promise<void> {
                     + `than the version in the Podman image storage. The image(s) from the Docker image storage `
                     + `will be pushed.`
             );
-            if (!isFullImageNameTag) {
-                sourceImages = sourceImages.map((image) => `${dockerBaseUrl}/${image}`);
-            }
             isImageFromDocker = true;
         }
         else {
@@ -171,9 +166,6 @@ async function run(): Promise<void> {
         }
     }
     else if (allTagsinDocker) {
-        if (!isFullImageNameTag) {
-            sourceImages = sourceImages.map((image) => `${dockerBaseUrl}/${image}`);
-        }
         core.info(
             `"${sourceImages[0]}" was found in the Docker image storage, but not in the Podman `
                 + `image storage. The image(s) will be pulled into Podman image storage, pushed, and then `
@@ -188,7 +180,7 @@ async function run(): Promise<void> {
         );
     }
 
-    let pushMsg = `⏳ Pushing "${sourceImages[0]}" to ${destinationImages.map((image) => `"${image}"`).join(", ")}`;
+    let pushMsg = `⏳ Pushing "${sourceImages[0]}" to ${destinationImages.join(", ")}`;
     if (username) {
         pushMsg += ` as "${username}"`;
     }
@@ -216,11 +208,12 @@ async function run(): Promise<void> {
     // push the image
     for (const destinationImage of destinationImages) {
         const args = [
+            ...(isImageFromDocker ? [ "--root", dockerPodmanRoot ] : []),
             "push",
             "--quiet",
             "--digestfile",
             digestFile,
-            sourceImages[0],
+            isImageFromDocker ? getFullDockerImageName(sourceImages[0]) : sourceImages[0],
             destinationImage,
         ];
 
@@ -260,14 +253,14 @@ async function run(): Promise<void> {
 }
 
 async function pullImageFromDocker(): Promise<ImageStorageCheckResult> {
-    core.info(`🔍 Checking if "${sourceImages.join(",")}" present in the local Docker image storage`);
+    core.info(`🔍 Checking if "${sourceImages.join(", ")}" present in the local Docker image storage`);
     const foundTags: string[] = [];
     const missingTags: string[] = [];
     try {
         for (const imageWithTag of sourceImages) {
             const commandResult: ExecResult = await execute(
                 await getPodmanPath(),
-                [ "pull", `docker-daemon:${imageWithTag}` ],
+                [ "--root", dockerPodmanRoot, "pull", `docker-daemon:${imageWithTag}` ],
                 { ignoreReturnCode: true, failOnStdErr: false, group: true }
             );
             if (commandResult.exitCode === 0) {
@@ -323,12 +316,6 @@ async function isPodmanLocalImageLatest(): Promise<boolean> {
     // same for all the tags present
     const imageWithTag = sourceImages[0];
 
-    // do not check if full name is specified as image pulled from docker
-    // will not have a different name
-    if (isFullImageName(imageWithTag)) {
-        return true;
-    }
-
     // get creation time of the image present in the Podman image storage
     const podmanLocalImageTimeStamp = await execute(await getPodmanPath(), [
         "image",
@@ -342,9 +329,10 @@ async function isPodmanLocalImageLatest(): Promise<boolean> {
     // appending 'docker.io/library' infront of image name as pulled image name
     // from Docker image storage starts with the 'docker.io/library'
     const pulledImageCreationTimeStamp = await execute(await getPodmanPath(), [
+        "--root", dockerPodmanRoot,
         "image",
         "inspect",
-        `${dockerBaseUrl}/${imageWithTag}`,
+        getFullDockerImageName(imageWithTag),
         "--format",
         "{{.Created}}",
     ]);
@@ -356,11 +344,15 @@ async function isPodmanLocalImageLatest(): Promise<boolean> {
     return podmanImageTime > dockerImageTime;
 }
 
-// remove the pulled image from the Podman image storage
-async function removeDockerImage(): Promise<void> {
-    core.info(`Removing "${sourceImages[0]}" from the Podman image storage`);
-    for (const imageWithTag of sourceImages) {
-        await execute(await getPodmanPath(), [ "rmi", imageWithTag ]);
+async function createDockerPodmanImageStroage(): Promise<void> {
+    core.info(`Creating temporary Podman image storage for pulling from Docker daemon`);
+    dockerPodmanRoot = await fs.promises.mkdtemp(path.join(os.tmpdir(), "docker-podman"));
+}
+
+async function removeDockerPodmanImageStroage(): Promise<void> {
+    if (dockerPodmanRoot) {
+        core.info(`Removing temporary Podman image storage for pulling from Docker daemon`);
+        await fs.promises.rmdir(dockerPodmanRoot, { recursive: true });
     }
 }
 
@@ -416,12 +408,17 @@ async function execute(
     }
 }
 
-run()
-    .then(async () => {
-        if (isImageFromDocker) {
-            await removeDockerImage();
-        }
-    })
+async function main(): Promise<void> {
+    try {
+        await createDockerPodmanImageStroage();
+        await run();
+    }
+    finally {
+        await removeDockerPodmanImageStroage();
+    }
+}
+
+main()
     .catch((err) => {
         core.setFailed(err.message);
     });
