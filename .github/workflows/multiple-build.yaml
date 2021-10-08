@@ -65,7 +65,7 @@ jobs:
         uses: ./
         with:
           image: ${{ env.IMAGE_NAME }}
-          tags: ${{ matrix.fully_qualified_image_name_tag && env.FULLY_QUALIFIED_IMAGE_NAME_TAG || env.SHORT_IMAGE_NAME_TAG }}
+          tags: ${{ matrix.fully_qualified_image_name_tag && env.FULLY_QUALIFIED_IMAGE_NAME_TAG || env.IMAGE_TAG }}
           registry: ${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_NAMESPACE }}
           username: ${{ secrets.REGISTRY_USER }}
           password: ${{ secrets.REGISTRY_PASSWORD }}
