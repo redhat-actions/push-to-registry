@@ -383,9 +383,14 @@ async function createDockerPodmanImageStroage(): Promise<void> {
 
 async function removeDockerPodmanImageStroage(): Promise<void> {
     if (dockerPodmanRoot) {
-        await removeDockerImage();
-        core.info(`Removing temporary Podman image storage for pulling from Docker daemon`);
-        await fs.promises.rmdir(dockerPodmanRoot, { recursive: true });
+        try {
+            await removeDockerImage();
+            core.info(`Removing temporary Podman image storage for pulling from Docker daemon`);
+            await fs.promises.rmdir(dockerPodmanRoot, { recursive: true });
+        }
+        catch (err) {
+            core.warning(`Failed to remove podman image stroage ${dockerPodmanRoot}: ${err}`);
+        }
     }
 }
 
