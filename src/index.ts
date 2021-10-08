@@ -5,6 +5,7 @@ import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
 import {
+    isStorageDriverOverlay, findFuseOverlayfsPath,
     splitByNewline,
     isFullImageName, getFullImageName,
     getFullDockerImageName,
@@ -29,6 +30,7 @@ let isImageFromDocker = false;
 let sourceImages: string[];
 let destinationImages: string[];
 let dockerPodmanRoot: string;
+let dockerPodmanOpts: string[];
 
 async function getPodmanPath(): Promise<string> {
     if (podmanPath == null) {
@@ -208,7 +210,7 @@ async function run(): Promise<void> {
     // push the image
     for (const destinationImage of destinationImages) {
         const args = [
-            ...(isImageFromDocker ? [ "--root", dockerPodmanRoot ] : []),
+            ...(isImageFromDocker ? dockerPodmanOpts : []),
             "push",
             "--quiet",
             "--digestfile",
@@ -260,7 +262,7 @@ async function pullImageFromDocker(): Promise<ImageStorageCheckResult> {
         for (const imageWithTag of sourceImages) {
             const commandResult: ExecResult = await execute(
                 await getPodmanPath(),
-                [ "--root", dockerPodmanRoot, "pull", `docker-daemon:${imageWithTag}` ],
+                [ ...dockerPodmanOpts, "pull", `docker-daemon:${imageWithTag}` ],
                 { ignoreReturnCode: true, failOnStdErr: false, group: true }
             );
             if (commandResult.exitCode === 0) {
@@ -329,7 +331,7 @@ async function isPodmanLocalImageLatest(): Promise<boolean> {
     // appending 'docker.io/library' infront of image name as pulled image name
     // from Docker image storage starts with the 'docker.io/library'
     const pulledImageCreationTimeStamp = await execute(await getPodmanPath(), [
-        "--root", dockerPodmanRoot,
+        ...dockerPodmanOpts,
         "image",
         "inspect",
         getFullDockerImageName(imageWithTag),
@@ -346,7 +348,25 @@ async function isPodmanLocalImageLatest(): Promise<boolean> {
 
 async function createDockerPodmanImageStroage(): Promise<void> {
     core.info(`Creating temporary Podman image storage for pulling from Docker daemon`);
-    dockerPodmanRoot = await fs.promises.mkdtemp(path.join(os.tmpdir(), "docker-podman"));
+    dockerPodmanRoot = await fs.promises.mkdtemp(path.join(os.tmpdir(), "podman-from-docker-"));
+
+    dockerPodmanOpts = [ "--root", dockerPodmanRoot ];
+
+    if (await isStorageDriverOverlay()) {
+        const fuseOverlayfsPath = await findFuseOverlayfsPath();
+        if (fuseOverlayfsPath) {
+            core.info(`Overriding storage mount_program with "fuse-overlayfs" in environment`);
+            dockerPodmanOpts.push("--storage-opt");
+            dockerPodmanOpts.push(`overlay.mount_program=${fuseOverlayfsPath}`);
+        }
+        else {
+            core.warning(`"fuse-overlayfs" is not found. Install it before running this action. `
+            + `For more detail see https://github.com/redhat-actions/buildah-build/issues/45`);
+        }
+    }
+    else {
+        core.info("Storage driver is not 'overlay', so not overriding storage configuration");
+    }
 }
 
 async function removeDockerPodmanImageStroage(): Promise<void> {
