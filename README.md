@@ -24,16 +24,16 @@ Refer to the [`podman push`](http://docs.podman.io/en/latest/markdown/podman-man
 
 | Input Name | Description | Default |
 | ---------- | ----------- | ------- |
-| image	| Name of the image you want to push. Eg. `username/imagename` or `imagename`. See the note below about naming image and registry. | **Required**
-| tags | The tag or tags of the image to push. For multiple tags, separate by a space. For example, `latest ${{ github.sha }}`. | `latest`
-| registry | Hostname and optional namespace to push the image to. Eg. `quay.io` or `quay.io/username`. See the note below about naming image and registry. | **Required**
+| image	| Name of the image you want to push. Eg. `username/imagename` or `imagename`. See the note below about naming image and registry. | **Required unless tags are provided in `<repository>:<tag>` form**
+| tags | The tag or tags of the image to push. For multiple tags, separate by whitespace. For example, `latest ${{ github.sha }}`. For multiple image names, specify tags in `<repository>:<tag>` form. For example, `quay.io/podman/stable:latest quay.io/containers/podman:latest` | `latest`
+| registry | Hostname and optional namespace to push the image to. Eg. `quay.io` or `quay.io/username`. See the note below about naming image and registry. | **Required unless tags are provided in `<repository>:<tag>` form**
 | username | Username with which to authenticate to the registry. Required unless already logged in to the registry. | None
 | password | Password, encrypted password, or access token to use to log in to the registry. Required unless already logged in to the registry. | None
 | tls-verify | Verify TLS certificates when contacting the registry. Set to `false` to skip certificate verification. | `true`
 | digestfile | After copying the image, write the digest of the resulting image to the file. The contents of this file are the digest output. | Auto-generated from image and tag
 | extra-args | Extra args to be passed to podman push. Separate arguments by newline. Do not use quotes. | None
 
-**NOTE**: You can provide the registry namespace (usually your username, or organization) either as a suffix to input `registry` (eg. `quay.io/username`) or as a prefix to input `image` (eg. `username/myimage`), but not in both. The full image path will be resolved from `<registry>/<image>`.
+**NOTE**: You can provide the registry namespace (usually your username, or organization) either as a suffix to input `registry` (eg. `quay.io/username`) or as a prefix to input `image` (eg. `username/myimage`), but not in both. The full image path will be resolved from `<registry>/<image>`. Alternatively, you can provide input `tags` as `<repository>:<tag>` with repository in fully qualified image name (FQIN) form (e.g. `quay.io/username/myimage:latest`). When FQIN tags are provided, input `image` and `registry` will be ignored.
 
 ## Action Outputs
 

@@ -10,55 +10,20 @@ env:
   IMAGE_NAMESPACE: redhat-github-actions
   IMAGE_NAME: ptr-test
   IMAGE_TAG: v1
+  SHORT_IMAGE_NAME_TAG: ptr-test:v1
+  FULLY_QUALIFIED_IMAGE_NAME_TAG: quay.io/redhat-github-actions/ptr-test:v1
 
 jobs:
-  build-only-podman:
-    name: Build and push image built only on Podman
+  build:
+    name: |-
+      Build with ${{ matrix.build_with }} and push${{ matrix.fully_qualified_image_name_tag && ' FQIN' || '' }} (latest: ${{ matrix.install_latest }})
     runs-on: ubuntu-20.04
     strategy:
       fail-fast: false
       matrix:
         install_latest: [ true, false ]
-
-    steps:
-
-      # Checkout push-to-registry action github repository
-      - name: Checkout Push to Registry action
-        uses: actions/checkout@v2
-
-      - name: Install latest podman
-        if: matrix.install_latest
-        run: |
-          bash .github/install_latest_podman.sh
-
-      - name: Build image using Podman
-        run: |
-            podman build -t ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }} -<<EOF
-            FROM busybox
-            RUN echo "hello world"
-            EOF
-
-      - name: Push image to ${{ env.IMAGE_REGISTRY }}
-        id: push
-        uses: ./
-        with:
-          image: ${{ env.IMAGE_NAME }}
-          tags: ${{ env.IMAGE_TAG }}
-          registry: ${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_NAMESPACE }}
-          username: ${{ secrets.REGISTRY_USER }}
-          password: ${{ secrets.REGISTRY_PASSWORD }}
-
-      - name: Echo outputs
-        run: |
-          echo "${{ toJSON(steps.push.outputs) }}"
-
-  build-only-docker:
-    name: Build and push image built only on Docker
-    runs-on: ubuntu-20.04
-    strategy:
-      fail-fast: false
-      matrix:
-        install_latest: [ true, false ]
+        build_with: [ "docker after podman", "podman after docker", "podman only", "docker only" ]
+        fully_qualified_image_name_tag: [ true, false ]
 
     steps:
 
@@ -72,102 +37,25 @@ jobs:
           bash .github/install_latest_podman.sh
 
       - name: Build image using Docker
+        if: endsWith(matrix.build_with, 'docker')
         run: |
-            docker build -t ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }} -<<EOF
-            FROM busybox
-            RUN echo "hello world"
-            EOF
-
-      - name: Push image to ${{ env.IMAGE_REGISTRY }}
-        id: push
-        uses: ./
-        with:
-          image: ${{ env.IMAGE_NAME }}
-          tags: ${{ env.IMAGE_TAG }}
-          registry: ${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_NAMESPACE }}
-          username: ${{ secrets.REGISTRY_USER }}
-          password: ${{ secrets.REGISTRY_PASSWORD }}
-
-      - name: Echo outputs
-        run: |
-          echo "${{ toJSON(steps.push.outputs) }}"
-
-  build-podman-latest:
-    name: Build and push image built latest on Podman
-    runs-on: ubuntu-20.04
-    strategy:
-      fail-fast: false
-      matrix:
-        install_latest: [ true, false ]
-
-    steps:
-
-      # Checkout push-to-registry action github repository
-      - name: Checkout Push to Registry action
-        uses: actions/checkout@v2
-
-      - name: Install latest podman
-        if: matrix.install_latest
-        run: |
-          bash .github/install_latest_podman.sh
-
-      - name: Build image using Docker
-        run: |
-            docker build -t ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }} -<<EOF
+            docker build -t ${{ matrix.fully_qualified_image_name_tag && env.FULLY_QUALIFIED_IMAGE_NAME_TAG || env.SHORT_IMAGE_NAME_TAG }} -<<EOF
             FROM busybox
             RUN echo "hello world"
             EOF
 
       - name: Build image using Podman
+        if: contains(matrix.build_with, 'podman')
         run: |
-            podman build -t ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }} -<<EOF
-            FROM busybox
-            RUN echo "hello world"
-            EOF
-
-      - name: Push image to ${{ env.IMAGE_REGISTRY }}
-        id: push
-        uses: ./
-        with:
-          image: ${{ env.IMAGE_NAME }}
-          tags: ${{ env.IMAGE_TAG }}
-          registry: ${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_NAMESPACE }}
-          username: ${{ secrets.REGISTRY_USER }}
-          password: ${{ secrets.REGISTRY_PASSWORD }}
-
-      - name: Echo outputs
-        run: |
-          echo "${{ toJSON(steps.push.outputs) }}"
-
-  build-docker-latest:
-    name: Build and push image built latest on Docker
-    runs-on: ubuntu-20.04
-    strategy:
-      fail-fast: false
-      matrix:
-        install_latest: [ true, false ]
-
-    steps:
-
-      # Checkout push-to-registry action github repository
-      - name: Checkout Push to Registry action
-        uses: actions/checkout@v2
-
-      - name: Install latest podman
-        if: matrix.install_latest
-        run: |
-          bash .github/install_latest_podman.sh
-
-      - name: Build image using Podman
-        run: |
-            podman build -t ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }} -<<EOF
+            podman build -t ${{ matrix.fully_qualified_image_name_tag && env.FULLY_QUALIFIED_IMAGE_NAME_TAG || env.SHORT_IMAGE_NAME_TAG }} -<<EOF
             FROM busybox
             RUN echo "hello world"
             EOF
 
       - name: Build image using Docker
+        if: startsWith(matrix.build_with, 'docker')
         run: |
-            docker build -t ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }} -<<EOF
+            docker build -t ${{ matrix.fully_qualified_image_name_tag && env.FULLY_QUALIFIED_IMAGE_NAME_TAG || env.SHORT_IMAGE_NAME_TAG }} -<<EOF
             FROM busybox
             RUN echo "hello world"
             EOF
@@ -177,7 +65,7 @@ jobs:
         uses: ./
         with:
           image: ${{ env.IMAGE_NAME }}
-          tags: ${{ env.IMAGE_TAG }}
+          tags: ${{ matrix.fully_qualified_image_name_tag && env.FULLY_QUALIFIED_IMAGE_NAME_TAG || env.IMAGE_TAG }}
           registry: ${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_NAMESPACE }}
           username: ${{ secrets.REGISTRY_USER }}
           password: ${{ secrets.REGISTRY_PASSWORD }}
