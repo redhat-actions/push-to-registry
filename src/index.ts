@@ -86,6 +86,13 @@ async function run(): Promise<void> {
         destinationImages = tagsList.map((tag) => getFullImageName(registryPath, tag));
     }
     else {
+        if (imageInput) {
+            core.warning(`Input "${Inputs.IMAGE}" is ignored when using full name tags`);
+        }
+        if (registry) {
+            core.warning(`Input "${Inputs.REGISTRY}" is ignored when using full name tags`);
+        }
+
         sourceImages = tagsList;
         destinationImages = tagsList;
     }
