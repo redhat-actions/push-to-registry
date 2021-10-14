@@ -145,3 +145,5 @@ If you are on `ubuntu-18.04` or any other older versions of ubuntu your workflow
 Note that quay.io repositories are private by default.<br>
 
 This means that if you push an image for the first time, you will have to authenticate before pulling it, or go to the repository's settings and change its visibility.
+
+Simiarly, if you receive a 403 Forbidden from GHCR, you may have to update the Package Settings. Refer to [this issue](https://github.com/redhat-actions/push-to-registry/issues/52).
