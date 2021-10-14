@@ -24,16 +24,44 @@ Refer to the [`podman push`](http://docs.podman.io/en/latest/markdown/podman-man
 
 | Input Name | Description | Default |
 | ---------- | ----------- | ------- |
-| image	| Name of the image you want to push. Eg. `username/imagename` or `imagename`. See the note below about naming image and registry. | **Required unless tags are provided in `<repository>:<tag>` form**
-| tags | The tag or tags of the image to push. For multiple tags, separate by whitespace. For example, `latest ${{ github.sha }}`. For multiple image names, specify tags in `<repository>:<tag>` form. For example, `quay.io/podman/stable:latest quay.io/containers/podman:latest` | `latest`
-| registry | Hostname and optional namespace to push the image to. Eg. `quay.io` or `quay.io/username`. See the note below about naming image and registry. | **Required unless tags are provided in `<repository>:<tag>` form**
+| image	| Name of the image you want to push. Eg. `username/imagename` or `imagename`. Refer to [Image and Tag Inputs](https://github.com/redhat-actions/push-to-registry#image-tag-inputs). | **Required** - unless all tags include registry and image name
+| tags | The tag or tags of the image to push. For multiple tags, separate by whitespace. Refer to [Image and Tag Inputs](https://github.com/redhat-actions/push-to-registry#image-tag-inputs). | `latest`
+| registry | Hostname and optional namespace to push the image to. Eg. `quay.io` or `quay.io/username`. Refer to [Image and Tag Inputs](https://github.com/redhat-actions/push-to-registry#image-tag-inputs). | **Required** - unless all tags include registry and image name
 | username | Username with which to authenticate to the registry. Required unless already logged in to the registry. | None
 | password | Password, encrypted password, or access token to use to log in to the registry. Required unless already logged in to the registry. | None
 | tls-verify | Verify TLS certificates when contacting the registry. Set to `false` to skip certificate verification. | `true`
 | digestfile | After copying the image, write the digest of the resulting image to the file. The contents of this file are the digest output. | Auto-generated from image and tag
 | extra-args | Extra args to be passed to podman push. Separate arguments by newline. Do not use quotes. | None
 
-**NOTE**: You can provide the registry namespace (usually your username, or organization) either as a suffix to input `registry` (eg. `quay.io/username`) or as a prefix to input `image` (eg. `username/myimage`), but not in both. The full image path will be resolved from `<registry>/<image>`. Alternatively, you can provide input `tags` as `<repository>:<tag>` with repository in fully qualified image name (FQIN) form (e.g. `quay.io/username/myimage:latest`). When FQIN tags are provided, input `image` and `registry` will be ignored.
+<a id="image-tag-inputs"></a>
+
+### Image, Tag and Registry Inputs
+The **push-to-registry** `image` and `tag` input work very similarly to [**buildah-build**](https://github.com/redhat-actions/buildah-build#image-tag-inputs).
+
+However, when using **push-to-registry** when the `tags` input are not fully qualified, the `registry` input must also be set.
+
+So, for **push-to-registry** the options are as follows:
+
+**Option 1**: Provide `registry`, `image`, and `tags` inputs. The image(s) will be pushed to `${registry}/${image}:${tag}`.
+
+For example:
+```yaml
+registry: quay.io
+image: my-image
+tags: v1 v1.0.0
+```
+will push the image tags: `quay.io/my-image:v1` and `quay.io/my-image:v1.0.0`.
+
+**Option 2**: Provide only the `tags` input, including the fully qualified image name in each tag. In this case, the `registry` and `image` inputs are ignored.
+
+For example:
+```yaml
+# 'registry' and 'image' inputs are not set
+tags: quay.io/my-image:v1 quay.io/my-image:v1.0.0
+```
+will push the image tags: `quay.io/my-image:v1` and `quay.io/my-image:v1.0.0`.
+
+If the `tags` input does not have image names in the `${registry}/${name}:${tag}` form, then the `registry` and `image` inputs must be set.
 
 ## Action Outputs
 

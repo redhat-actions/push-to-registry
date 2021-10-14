@@ -1,5 +1,8 @@
 # push-to-registry Changelog
 
+## v2.4
+- Allow fully qualified image names in `tags` input, for compatibility with [docker/metadata-action`](https://github.com/docker/metadata-action). [#50](https://github.com/redhat-actions/push-to-registry/pull/50)
+
 ## v2.3.2
 - Add the word `local` to the image check messages.
 - Add matrix to install latest podman. (Internal)
