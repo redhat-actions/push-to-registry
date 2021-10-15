@@ -46,20 +46,20 @@ So, for **push-to-registry** the options are as follows:
 
 For example:
 ```yaml
-registry: quay.io
+registry: quay.io/my-namespace
 image: my-image
 tags: v1 v1.0.0
 ```
-will push the image tags: `quay.io/my-image:v1` and `quay.io/my-image:v1.0.0`.
+will push the image tags: `quay.io/my-namespace/my-image:v1` and `quay.io/my-namespace/my-image:v1.0.0`.
 
 **Option 2**: Provide only the `tags` input, including the fully qualified image name in each tag. In this case, the `registry` and `image` inputs are ignored.
 
 For example:
 ```yaml
 # 'registry' and 'image' inputs are not set
-tags: quay.io/my-image:v1 quay.io/my-image:v1.0.0
+tags: quay.io/my-namespace/my-image:v1 quay.io/my-namespace/my-image:v1.0.0
 ```
-will push the image tags: `quay.io/my-image:v1` and `quay.io/my-image:v1.0.0`.
+will push the image tags: `quay.io/my-namespace/my-image:v1` and `quay.io/my-namespace/my-image:v1.0.0`.
 
 If the `tags` input does not have image names in the `${registry}/${name}:${tag}` form, then the `registry` and `image` inputs must be set.
 
