@@ -43,7 +43,7 @@ async function getPodmanPath(): Promise<string> {
 
 async function run(): Promise<void> {
     const DEFAULT_TAG = "latest";
-    const imageInput = core.getInput(Inputs.IMAGE);
+    const image = core.getInput(Inputs.IMAGE);
     const tags = core.getInput(Inputs.TAGS);
     // split tags
     const tagsList = tags.trim().split(/\s+/);
@@ -53,6 +53,21 @@ async function run(): Promise<void> {
         core.info(`Input "${Inputs.TAGS}" is not provided, using default tag "${DEFAULT_TAG}"`);
         tagsList.push(DEFAULT_TAG);
     }
+
+    const normalizedTagsList: string[] = [];
+    let isNormalized = false;
+    for (const tag of tagsList) {
+        normalizedTagsList.push(tag.toLowerCase());
+        if (tag.toLowerCase() !== tag) {
+            isNormalized = true;
+        }
+    }
+    const normalizedImage = image.toLowerCase();
+    if (isNormalized || image !== normalizedImage) {
+        core.warning(`Reference to image and/or tag must be lowercase.`
+        + ` Reference has been converted to be compliant with standard.`);
+    }
+
     const registry = core.getInput(Inputs.REGISTRY);
     const username = core.getInput(Inputs.USERNAME);
     const password = core.getInput(Inputs.PASSWORD);
@@ -60,12 +75,12 @@ async function run(): Promise<void> {
     const digestFileInput = core.getInput(Inputs.DIGESTFILE);
 
     // check if all tags provided are in `image:tag` format
-    const isFullImageNameTag = isFullImageName(tagsList[0]);
-    if (tagsList.some((tag) => isFullImageName(tag) !== isFullImageNameTag)) {
+    const isFullImageNameTag = isFullImageName(normalizedTagsList[0]);
+    if (normalizedTagsList.some((tag) => isFullImageName(tag) !== isFullImageNameTag)) {
         throw new Error(`Input "${Inputs.TAGS}" cannot have a mix of full name and non full name tags`);
     }
     if (!isFullImageNameTag) {
-        if (!imageInput) {
+        if (!normalizedImage) {
             throw new Error(`Input "${Inputs.IMAGE}" must be provided when using non full name tags`);
         }
         if (!registry) {
@@ -73,28 +88,28 @@ async function run(): Promise<void> {
         }
 
         const registryWithoutTrailingSlash = registry.replace(/\/$/, "");
-        const registryPath = `${registryWithoutTrailingSlash}/${imageInput}`;
-        core.info(`Combining image name "${imageInput}" and registry "${registry}" `
+        const registryPath = `${registryWithoutTrailingSlash}/${normalizedImage}`;
+        core.info(`Combining image name "${normalizedImage}" and registry "${registry}" `
             + `to form registry path "${registryPath}"`);
-        if (imageInput.indexOf("/") > -1 && registry.indexOf("/") > -1) {
+        if (normalizedImage.indexOf("/") > -1 && registry.indexOf("/") > -1) {
             core.warning(`"${registryPath}" does not seem to be a valid registry path. `
             + `The registry path should not contain more than 2 slashes. `
             + `Refer to the Inputs section of the readme for naming image and registry.`);
         }
 
-        sourceImages = tagsList.map((tag) => getFullImageName(imageInput, tag));
-        destinationImages = tagsList.map((tag) => getFullImageName(registryPath, tag));
+        sourceImages = normalizedTagsList.map((tag) => getFullImageName(normalizedImage, tag));
+        destinationImages = normalizedTagsList.map((tag) => getFullImageName(registryPath, tag));
     }
     else {
-        if (imageInput) {
+        if (normalizedImage) {
             core.warning(`Input "${Inputs.IMAGE}" is ignored when using full name tags`);
         }
         if (registry) {
             core.warning(`Input "${Inputs.REGISTRY}" is ignored when using full name tags`);
         }
 
-        sourceImages = tagsList;
-        destinationImages = tagsList;
+        sourceImages = normalizedTagsList;
+        destinationImages = normalizedTagsList;
     }
 
     const inputExtraArgsStr = core.getInput(Inputs.EXTRA_ARGS);
@@ -157,8 +172,8 @@ async function run(): Promise<void> {
             );
         }
 
-        const allTagsinPodman: boolean = podmanFoundTags.length === tagsList.length;
-        const allTagsinDocker: boolean = dockerFoundTags.length === tagsList.length;
+        const allTagsinPodman: boolean = podmanFoundTags.length === normalizedTagsList.length;
+        const allTagsinDocker: boolean = dockerFoundTags.length === normalizedTagsList.length;
 
         if (allTagsinPodman && allTagsinDocker) {
             const isPodmanImageLatest = await isPodmanLocalImageLatest();
