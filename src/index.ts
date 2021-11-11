@@ -406,7 +406,7 @@ async function checkIfManifestsExists(): Promise<boolean> {
     const foundManifests = [];
     const missingManifests = [];
     // check if manifest exist in Podman's storage
-    core.debug(`🔍 Checking if the given image is manifest or not.`);
+    core.info(`🔍 Checking if the given image is manifest or not.`);
     for (const manifest of sourceImages) {
         const commandResult: ExecResult = await execute(
             await getPodmanPath(),
@@ -421,17 +421,18 @@ async function checkIfManifestsExists(): Promise<boolean> {
         }
     }
 
+    if (foundManifests.length > 0) {
+        core.info(`Image${foundManifests.length !== 1 ? "s" : ""} "${foundManifests.join(", ")}" `
+            + `${foundManifests.length !== 1 ? "are" : "is"} manifests.`);
+    }
+
     if (foundManifests.length > 0 && missingManifests.length > 0) {
         throw new Error(`Manifest${missingManifests.length !== 1 ? "s" : ""} "${missingManifests.join(", ")}" `
-            + `not found in the Podman image storage.`);
+            + `not found in the Podman image storage. Make sure that all the provided images are either `
+            + `manifests or container images.`);
     }
 
-    if (missingManifests.length === sourceImages.length) {
-        return false;
-    }
-
-    return true;
-
+    return foundManifests.length === sourceImages.length;
 }
 
 async function execute(
