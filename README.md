@@ -12,7 +12,7 @@
 [![license badge](https://img.shields.io/github/license/redhat-actions/push-to-registry)](./LICENSE)
 [![size badge](https://img.shields.io/github/size/redhat-actions/push-to-registry/dist/index.js)](./dist)
 
-Push-to-registry is a GitHub Action for pushing a container image to an image registry, such as Dockerhub, quay&#46;io, the GitHub Container Registry, or an OpenShift integrated registry.
+Push-to-registry is a GitHub Action for pushing a container image or a manifest to an image registry, such as Dockerhub, quay&#46;io, the GitHub Container Registry, or an OpenShift integrated registry.
 
 This action only runs on Linux, as it uses [podman](https://github.com/containers/Podman) to perform the push. [GitHub's Ubuntu action runners](https://github.com/actions/virtual-environments#available-environments) come with Podman preinstalled. If you are not using those runners, you must first [install Podman](https://podman.io/getting-started/installation).
 
@@ -24,8 +24,8 @@ Refer to the [`podman push`](http://docs.podman.io/en/latest/markdown/podman-man
 
 | Input Name | Description | Default |
 | ---------- | ----------- | ------- |
-| image	| Name of the image you want to push. Eg. `username/imagename` or `imagename`. Refer to [Image and Tag Inputs](https://github.com/redhat-actions/push-to-registry#image-tag-inputs). | **Required** - unless all tags include registry and image name
-| tags | The tag or tags of the image to push. For multiple tags, separate by whitespace. Refer to [Image and Tag Inputs](https://github.com/redhat-actions/push-to-registry#image-tag-inputs). | `latest`
+| image	| Name of the image or manifest you want to push. Eg. `username/imagename` or `imagename`. Refer to [Image and Tag Inputs](https://github.com/redhat-actions/push-to-registry#image-tag-inputs). | **Required** - unless all tags include registry and image name
+| tags | The tag or tags of the image or manifest to push. For multiple tags, separate by whitespace. Refer to [Image and Tag Inputs](https://github.com/redhat-actions/push-to-registry#image-tag-inputs). | `latest`
 | registry | Hostname and optional namespace to push the image to. Eg. `quay.io` or `quay.io/username`. Refer to [Image and Tag Inputs](https://github.com/redhat-actions/push-to-registry#image-tag-inputs). | **Required** - unless all tags include registry and image name
 | username | Username with which to authenticate to the registry. Required unless already logged in to the registry. | None
 | password | Password, encrypted password, or access token to use to log in to the registry. Required unless already logged in to the registry. | None
@@ -82,6 +82,13 @@ For example:
 ```
 
 `registry-path`: The first element of `registry-paths`, as a string.
+
+## Pushing Manifest
+
+This action supports manifest, this means you can push the manifest with this action.
+Input `image` and `tags` can be used for manifest also. Provided you can either push manifest or container image, not both of them together.
+
+Refer to [Manifest Build and Push example](./github/workflows/manifest-build-push.yaml) for a sophisticated example of building and pushing a manifest.
 
 ## Examples
 

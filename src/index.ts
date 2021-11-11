@@ -236,6 +236,10 @@ async function run(): Promise<void> {
             isImageFromDocker ? getFullDockerImageName(sourceImages[i]) : sourceImages[i],
             destinationImages[i],
         ]);
+        // to push all the images referenced in the manifest
+        if (isManifest) {
+            args.push("--all");
+        }
         if (podmanExtraArgs.length > 0) {
             args.push(...podmanExtraArgs);
         }
