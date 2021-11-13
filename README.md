@@ -85,8 +85,7 @@ For example:
 
 ## Pushing Manifest
 
-This action supports manifest, this means you can push the manifest with this action.
-Input `image` and `tags` can be used for manifest also. Provided you can either push manifest or container image, not both of them together.
+If multiple tags are provided, either all tags must point to manifests, or none of them. i.e., you cannot push both manifests are regular images in one `push-to-registry` step.
 
 Refer to [Manifest Build and Push example](./github/workflows/manifest-build-push.yaml) for a sophisticated example of building and pushing a manifest.
 

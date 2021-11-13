@@ -427,7 +427,7 @@ async function checkIfManifestsExists(): Promise<boolean> {
 
     if (foundManifests.length > 0) {
         core.info(`Image${foundManifests.length !== 1 ? "s" : ""} "${foundManifests.join(", ")}" `
-            + `${foundManifests.length !== 1 ? "are" : "is"} manifests.`);
+            + `${foundManifests.length !== 1 ? "are manifests" : "is a manifest"}.`);
     }
 
     if (foundManifests.length > 0 && missingManifests.length > 0) {
