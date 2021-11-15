@@ -12,7 +12,7 @@
 [![license badge](https://img.shields.io/github/license/redhat-actions/push-to-registry)](./LICENSE)
 [![size badge](https://img.shields.io/github/size/redhat-actions/push-to-registry/dist/index.js)](./dist)
 
-Push-to-registry is a GitHub Action for pushing a container image or a manifest to an image registry, such as Dockerhub, quay&#46;io, the GitHub Container Registry, or an OpenShift integrated registry.
+Push-to-registry is a GitHub Action for pushing a container image or an [image manifest](https://github.com/containers/buildah/blob/main/docs/buildah-manifest.1.md) to an image registry, such as Dockerhub, quay&#46;io, the GitHub Container Registry, or an OpenShift integrated registry.
 
 This action only runs on Linux, as it uses [podman](https://github.com/containers/Podman) to perform the push. [GitHub's Ubuntu action runners](https://github.com/actions/virtual-environments#available-environments) come with Podman preinstalled. If you are not using those runners, you must first [install Podman](https://podman.io/getting-started/installation).
 
