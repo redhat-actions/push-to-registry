@@ -1,5 +1,8 @@
 # push-to-registry Changelog
 
+## v2.4.1
+- Fix issue when pushing multiple tags. [#57](https://github.com/redhat-actions/push-to-registry/issues/57)
+
 ## v2.4
 - Allow fully qualified image names in `tags` input, for compatibility with [docker/metadata-action`](https://github.com/docker/metadata-action). [#50](https://github.com/redhat-actions/push-to-registry/pull/50)
 - Fix issue where image pulled from Docker storage would overwrite image in Podman storage [733d8e9](https://github.com/redhat-actions/buildah-build/commit/733d8e9a389084e2f8c441f0a568e5d467497557)
