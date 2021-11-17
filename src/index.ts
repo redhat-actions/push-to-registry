@@ -189,7 +189,7 @@ async function run(): Promise<void> {
         );
     }
 
-    let pushMsg = `⏳ Pushing "${sourceImages[0]}" to ${destinationImages.join(", ")}`;
+    let pushMsg = `⏳ Pushing "${sourceImages.join(", ")}" to "${destinationImages.join(", ")}" respectively`;
     if (username) {
         pushMsg += ` as "${username}"`;
     }
@@ -215,15 +215,15 @@ async function run(): Promise<void> {
     }
 
     // push the image
-    for (const destinationImage of destinationImages) {
+    for (let i = 0; i < destinationImages.length; i++) {
         const args = [
             ...(isImageFromDocker ? dockerPodmanOpts : []),
             "push",
             "--quiet",
             "--digestfile",
             digestFile,
-            isImageFromDocker ? getFullDockerImageName(sourceImages[0]) : sourceImages[0],
-            destinationImage,
+            isImageFromDocker ? getFullDockerImageName(sourceImages[i]) : sourceImages[i],
+            destinationImages[i],
         ];
 
         if (podmanExtraArgs.length > 0) {
@@ -241,9 +241,9 @@ async function run(): Promise<void> {
         }
 
         await execute(await getPodmanPath(), args);
-        core.info(`✅ Successfully pushed "${sourceImages[0]}" to "${destinationImage}"`);
+        core.info(`✅ Successfully pushed "${sourceImages[i]}" to "${destinationImages[i]}"`);
 
-        registryPathList.push(destinationImage);
+        registryPathList.push(destinationImages[i]);
 
         try {
             const digest = (await fs.promises.readFile(digestFile)).toString();
