@@ -51,8 +51,7 @@ jobs:
 
       - name: Build Image
         id: build_image
-        # for testing purpose only, to be changed after manifest feature merge in buildah build
-        uses: divyansh42/buildah-build@manifest-support
+        uses: redhat-actions/buildah-build@main
         with:
           image: ${{ env.IMAGE_NAME }}
           tags: ${{ env.IMAGE_TAGS }}
