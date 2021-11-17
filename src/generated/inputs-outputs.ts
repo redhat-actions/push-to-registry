@@ -16,7 +16,7 @@ export enum Inputs {
      */
     EXTRA_ARGS = "extra-args",
     /**
-     * Name of the image to push (e.g. username/imagename or imagename)
+     * Name of the image/manifest to push (e.g. username/imagename or imagename)
      * Required: false
      * Default: None.
      */
@@ -34,7 +34,8 @@ export enum Inputs {
      */
     REGISTRY = "registry",
     /**
-     * The tag or tags of the image to push. For multiple tags, seperate by whitespace. For example, "latest v1"
+     * 'The tag or tags of the image/manifest to push.
+     * For multiple tags, seperate by whitespace. For example, "latest v1"'
      * Required: false
      * Default: "latest"
      */
@@ -55,7 +56,7 @@ export enum Inputs {
 
 export enum Outputs {
     /**
-     * The pushed image digest, as written to the "digestfile"
+     * The pushed image/manifest digest, as written to the "digestfile"
      * Required: false
      * Default: None.
      */

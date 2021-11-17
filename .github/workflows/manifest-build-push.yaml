@@ -1,0 +1,75 @@
+# This workflow will perform a test whenever there
+# is some change in code done to ensure that the changes
+# are not buggy and we are getting the desired output.
+name: Build and Push Manifest
+on:
+  push:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 0 * * *'  # every day at midnight
+
+env:
+  IMAGE_NAME: ptr-manifest
+  IMAGE_TAGS: v1 ${{ github.sha }}
+  IMAGE_REGISTRY: quay.io
+  IMAGE_NAMESPACE: redhat-github-actions
+
+jobs:
+  push-quay:
+    name: Build and push manifest
+    runs-on: ubuntu-20.04
+    strategy:
+      fail-fast: false
+      matrix:
+        install_latest: [ true, false ]
+
+    steps:
+      # Checkout push-to-registry action github repository
+      - name: Checkout Push to Registry action
+        uses: actions/checkout@v2
+
+      - name: Install latest podman
+        if: matrix.install_latest
+        run: |
+          bash .github/install_latest_podman.sh
+
+      - name: Install qemu dependency
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y qemu-user-static
+
+      - name: Create Containerfile
+        run: |
+          cat > Containerfile<<EOF
+
+          FROM docker.io/alpine:3.14
+
+          RUN echo "hello world"
+
+          ENTRYPOINT [ "sh", "-c", "echo -n 'Machine: ' && uname -m && echo -n 'Bits: ' && getconf LONG_BIT && echo 'goodbye world'" ]
+          EOF
+
+      - name: Build Image
+        id: build_image
+        uses: redhat-actions/buildah-build@main
+        with:
+          image: ${{ env.IMAGE_NAME }}
+          tags: ${{ env.IMAGE_TAGS }}
+          archs: amd64, arm64
+          containerfiles: |
+            ./Containerfile
+
+      # Push the image manifest to Quay.io (Image Registry)
+      - name: Push To Quay
+        uses: ./
+        id: push
+        with:
+          image: ${{ steps.build_image.outputs.image }}
+          tags: ${{ steps.build_image.outputs.tags }}
+          registry: ${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_NAMESPACE }}
+          username: ${{ secrets.REGISTRY_USER }}
+          password: ${{ secrets.REGISTRY_PASSWORD }}
+
+      - name: Echo outputs
+        run: |
+          echo "${{ toJSON(steps.push.outputs) }}"

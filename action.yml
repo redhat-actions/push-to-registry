@@ -6,10 +6,12 @@ branding:
   color: red
 inputs:
   image:
-    description: 'Name of the image to push (e.g. username/imagename or imagename)'
+    description: 'Name of the image/manifest to push (e.g. username/imagename or imagename)'
     required: false
   tags:
-    description: 'The tag or tags of the image to push. For multiple tags, seperate by whitespace. For example, "latest v1"'
+    description: |
+      'The tag or tags of the image/manifest to push.
+      For multiple tags, seperate by whitespace. For example, "latest v1"'
     required: false
     default: 'latest'
   registry:
@@ -39,7 +41,7 @@ inputs:
 
 outputs:
   digest:
-    description: 'The pushed image digest, as written to the "digestfile"'
+    description: 'The pushed image/manifest digest, as written to the "digestfile"'
   registry-path:
     description: 'The first element of registry-paths.'
   registry-paths:

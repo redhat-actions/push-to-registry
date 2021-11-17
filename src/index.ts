@@ -107,86 +107,91 @@ async function run(): Promise<void> {
     }
 
     const registryPathList: string[] = [];
+    // here
+    // check if provided image is manifest or not
+    const isManifest = await checkIfManifestsExists();
 
-    // check if image with all the required tags exist in Podman image storage
-    const podmanImageStorageCheckResult: ImageStorageCheckResult = await checkImageInPodman();
+    if (!isManifest) {
+        // check if image with all the required tags exist in Podman image storage
+        const podmanImageStorageCheckResult: ImageStorageCheckResult = await checkImageInPodman();
 
-    const podmanFoundTags: string[] = podmanImageStorageCheckResult.foundTags;
-    const podmanMissingTags: string[] = podmanImageStorageCheckResult.missingTags;
+        const podmanFoundTags: string[] = podmanImageStorageCheckResult.foundTags;
+        const podmanMissingTags: string[] = podmanImageStorageCheckResult.missingTags;
 
-    if (podmanFoundTags.length > 0) {
-        core.info(`Tag${podmanFoundTags.length !== 1 ? "s" : ""} "${podmanFoundTags.join(", ")}" `
-        + `found in Podman image storage`);
-    }
+        if (podmanFoundTags.length > 0) {
+            core.info(`Tag${podmanFoundTags.length !== 1 ? "s" : ""} "${podmanFoundTags.join(", ")}" `
+            + `found in Podman image storage`);
+        }
 
-    // Log warning if few tags are not found
-    if (podmanMissingTags.length > 0 && podmanFoundTags.length > 0) {
-        core.warning(`Tag${podmanMissingTags.length !== 1 ? "s" : ""} "${podmanMissingTags.join(", ")}" `
-        + `not found in Podman image storage`);
-    }
+        // Log warning if few tags are not found
+        if (podmanMissingTags.length > 0 && podmanFoundTags.length > 0) {
+            core.warning(`Tag${podmanMissingTags.length !== 1 ? "s" : ""} "${podmanMissingTags.join(", ")}" `
+            + `not found in Podman image storage`);
+        }
 
-    // check if image with all the required tags exist in Docker image storage
-    // and if exist pull the image with all the tags to Podman
-    const dockerImageStorageCheckResult: ImageStorageCheckResult = await pullImageFromDocker();
+        // check if image with all the required tags exist in Docker image storage
+        // and if exist pull the image with all the tags to Podman
+        const dockerImageStorageCheckResult: ImageStorageCheckResult = await pullImageFromDocker();
 
-    const dockerFoundTags: string[] = dockerImageStorageCheckResult.foundTags;
-    const dockerMissingTags: string[] = dockerImageStorageCheckResult.missingTags;
+        const dockerFoundTags: string[] = dockerImageStorageCheckResult.foundTags;
+        const dockerMissingTags: string[] = dockerImageStorageCheckResult.missingTags;
 
-    if (dockerFoundTags.length > 0) {
-        core.info(`Tag${dockerFoundTags.length !== 1 ? "s" : ""} "${dockerFoundTags.join(", ")}" `
-        + `found in Docker image storage`);
-    }
+        if (dockerFoundTags.length > 0) {
+            core.info(`Tag${dockerFoundTags.length !== 1 ? "s" : ""} "${dockerFoundTags.join(", ")}" `
+            + `found in Docker image storage`);
+        }
 
-    // Log warning if few tags are not found
-    if (dockerMissingTags.length > 0 && dockerFoundTags.length > 0) {
-        core.warning(`Tag${dockerMissingTags.length !== 1 ? "s" : ""} "${dockerMissingTags.join(", ")}" `
-        + `not found in Docker image storage`);
-    }
+        // Log warning if few tags are not found
+        if (dockerMissingTags.length > 0 && dockerFoundTags.length > 0) {
+            core.warning(`Tag${dockerMissingTags.length !== 1 ? "s" : ""} "${dockerMissingTags.join(", ")}" `
+            + `not found in Docker image storage`);
+        }
 
-    // failing if image with any of the tag is not found in Docker as well as Podman
-    if (podmanMissingTags.length > 0 && dockerMissingTags.length > 0) {
-        throw new Error(
-            `❌ All tags were not found in either Podman image storage, or Docker image storage. `
-            + `Tag${podmanMissingTags.length !== 1 ? "s" : ""} "${podmanMissingTags.join(", ")}" `
-            + `not found in Podman image storage, and tag${dockerMissingTags.length !== 1 ? "s" : ""} `
-            + `"${dockerMissingTags.join(", ")}" not found in Docker image storage.`
-        );
-    }
+        // failing if image with any of the tag is not found in Docker as well as Podman
+        if (podmanMissingTags.length > 0 && dockerMissingTags.length > 0) {
+            throw new Error(
+                `❌ All tags were not found in either Podman image storage, or Docker image storage. `
+                + `Tag${podmanMissingTags.length !== 1 ? "s" : ""} "${podmanMissingTags.join(", ")}" `
+                + `not found in Podman image storage, and tag${dockerMissingTags.length !== 1 ? "s" : ""} `
+                + `"${dockerMissingTags.join(", ")}" not found in Docker image storage.`
+            );
+        }
 
-    const allTagsinPodman: boolean = podmanFoundTags.length === tagsList.length;
-    const allTagsinDocker: boolean = dockerFoundTags.length === tagsList.length;
+        const allTagsinPodman: boolean = podmanFoundTags.length === tagsList.length;
+        const allTagsinDocker: boolean = dockerFoundTags.length === tagsList.length;
 
-    if (allTagsinPodman && allTagsinDocker) {
-        const isPodmanImageLatest = await isPodmanLocalImageLatest();
-        if (!isPodmanImageLatest) {
-            core.warning(
-                `The version of "${sourceImages[0]}" in the Docker image storage is more recent `
-                    + `than the version in the Podman image storage. The image(s) from the Docker image storage `
-                    + `will be pushed.`
+        if (allTagsinPodman && allTagsinDocker) {
+            const isPodmanImageLatest = await isPodmanLocalImageLatest();
+            if (!isPodmanImageLatest) {
+                core.warning(
+                    `The version of "${sourceImages[0]}" in the Docker image storage is more recent `
+                        + `than the version in the Podman image storage. The image(s) from the Docker image storage `
+                        + `will be pushed.`
+                );
+                isImageFromDocker = true;
+            }
+            else {
+                core.warning(
+                    `The version of "${sourceImages[0]}" in the Podman image storage is more recent `
+                        + `than the version in the Docker image storage. The image(s) from the Podman image `
+                        + `storage will be pushed.`
+                );
+            }
+        }
+        else if (allTagsinDocker) {
+            core.info(
+                `Tag "${sourceImages[0]}" was found in the Docker image storage, but not in the Podman `
+                    + `image storage. The image(s) will be pulled into Podman image storage, pushed, and then `
+                    + `removed from the Podman image storage.`
             );
             isImageFromDocker = true;
         }
         else {
-            core.warning(
-                `The version of "${sourceImages[0]}" in the Podman image storage is more recent `
-                    + `than the version in the Docker image storage. The image(s) from the Podman image `
-                    + `storage will be pushed.`
+            core.info(
+                `Tag "${sourceImages[0]}" was found in the Podman image storage, but not in the Docker `
+                    + `image storage. The image(s) will be pushed from Podman image storage.`
             );
         }
-    }
-    else if (allTagsinDocker) {
-        core.info(
-            `Tag "${sourceImages[0]}" was found in the Docker image storage, but not in the Podman `
-                + `image storage. The image(s) will be pulled into Podman image storage, pushed, and then `
-                + `removed from the Podman image storage.`
-        );
-        isImageFromDocker = true;
-    }
-    else {
-        core.info(
-            `Tag "${sourceImages[0]}" was found in the Podman image storage, but not in the Docker `
-                + `image storage. The image(s) will be pushed from Podman image storage.`
-        );
     }
 
     let pushMsg = `⏳ Pushing "${sourceImages.join(", ")}" to "${destinationImages.join(", ")}" respectively`;
@@ -216,16 +221,25 @@ async function run(): Promise<void> {
 
     // push the image
     for (let i = 0; i < destinationImages.length; i++) {
-        const args = [
-            ...(isImageFromDocker ? dockerPodmanOpts : []),
+        const args = [];
+        if (isImageFromDocker) {
+            args.push(...dockerPodmanOpts);
+        }
+        if (isManifest) {
+            args.push("manifest");
+        }
+        args.push(...[
             "push",
             "--quiet",
             "--digestfile",
             digestFile,
             isImageFromDocker ? getFullDockerImageName(sourceImages[i]) : sourceImages[i],
             destinationImages[i],
-        ];
-
+        ]);
+        // to push all the images referenced in the manifest
+        if (isManifest) {
+            args.push("--all");
+        }
         if (podmanExtraArgs.length > 0) {
             args.push(...podmanExtraArgs);
         }
@@ -390,6 +404,39 @@ async function removeDockerPodmanImageStroage(): Promise<void> {
             core.warning(`Failed to remove podman image stroage ${dockerPodmanRoot}: ${err}`);
         }
     }
+}
+
+async function checkIfManifestsExists(): Promise<boolean> {
+    const foundManifests = [];
+    const missingManifests = [];
+    // check if manifest exist in Podman's storage
+    core.info(`🔍 Checking if the given image is manifest or not.`);
+    for (const manifest of sourceImages) {
+        const commandResult: ExecResult = await execute(
+            await getPodmanPath(),
+            [ "manifest", "exists", manifest ],
+            { ignoreReturnCode: true, group: true }
+        );
+        if (commandResult.exitCode === 0) {
+            foundManifests.push(manifest);
+        }
+        else {
+            missingManifests.push(manifest);
+        }
+    }
+
+    if (foundManifests.length > 0) {
+        core.info(`Image${foundManifests.length !== 1 ? "s" : ""} "${foundManifests.join(", ")}" `
+            + `${foundManifests.length !== 1 ? "are manifests" : "is a manifest"}.`);
+    }
+
+    if (foundManifests.length > 0 && missingManifests.length > 0) {
+        throw new Error(`Manifest${missingManifests.length !== 1 ? "s" : ""} "${missingManifests.join(", ")}" `
+            + `not found in the Podman image storage. Make sure that all the provided images are either `
+            + `manifests or container images.`);
+    }
+
+    return foundManifests.length === sourceImages.length;
 }
 
 async function execute(
