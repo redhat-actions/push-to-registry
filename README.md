@@ -6,6 +6,7 @@
 [![Push to Quay.io](https://github.com/redhat-actions/push-to-registry/actions/workflows/quay-push.yaml/badge.svg)](https://github.com/redhat-actions/push-to-registry/actions/workflows/quay-push.yaml)
 [![Push to GHCR](https://github.com/redhat-actions/push-to-registry/actions/workflows/ghcr-push.yaml/badge.svg)](https://github.com/redhat-actions/push-to-registry/actions/workflows/ghcr-push.yaml)
 [![Login and Push](https://github.com/redhat-actions/push-to-registry/workflows/Login%20and%20Push/badge.svg)](https://github.com/redhat-actions/push-to-registry/actions?query=workflow%3A%22Login+and+Push%22)
+[![Build and Push Manifest](https://github.com/redhat-actions/push-to-registry/actions/workflows/manifest-build-push.yaml/badge.svg)](https://github.com/redhat-actions/push-to-registry/actions/workflows/manifest-build-push.yaml)
 [![Multiple container CLI build tests](https://github.com/redhat-actions/push-to-registry/workflows/Multiple%20container%20CLI%20build%20tests/badge.svg)](https://github.com/redhat-actions/push-to-registry/actions?query=workflow%3A%22Multiple+container+CLI+build+tests%22)
 <br><br>
 [![tag badge](https://img.shields.io/github/v/tag/redhat-actions/push-to-registry)](https://github.com/redhat-actions/push-to-registry/tags)
