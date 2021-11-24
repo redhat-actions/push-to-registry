@@ -1,5 +1,8 @@
 # push-to-registry Changelog
 
+## v2.5
+- Allow pushing image manifest.
+
 ## v2.4.1
 - Fix issue when pushing multiple tags. [#57](https://github.com/redhat-actions/push-to-registry/issues/57)
 
