@@ -1,5 +1,8 @@
 # push-to-registry Changelog
 
+## v2.5.1
+- README update
+
 ## v2.5
 - Allow pushing image manifest.
 
