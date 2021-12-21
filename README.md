@@ -112,8 +112,8 @@ jobs:
       with:
         image: my-app
         tags: latest ${{ github.sha }}
-        dockerfiles: |
-          ./Dockerfile
+        containerfiles: |
+          ./Containerfile
 
     # Podman Login action (https://github.com/redhat-actions/podman-login) also be used to log in,
     # in which case 'username' and 'password' can be omitted.
