@@ -130,7 +130,7 @@ jobs:
     - name: Print image url
       run: echo "Image pushed to ${{ steps.push-to-quay.outputs.registry-paths }}"
 ```
-
+<!-- markdown-link-check-disable-next-line -->
 Refer to [GHCR push example](./.github/workflows/ghcr-push.yaml) for complete example of push to [GitHub Container Registry (GHCR)](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry).
 
 ## Note about images built with Docker
