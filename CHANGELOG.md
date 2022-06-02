@@ -1,5 +1,9 @@
 # push-to-registry Changelog
 
+## v2.6
+- Make image and tag in lowercase, if found in uppercase. https://github.com/redhat-actions/push-to-registry/issues/54
+- Remove kubic packages from the test workflows. https://github.com/redhat-actions/buildah-build/issues/93
+
 ## v2.5.1
 - README update
 
