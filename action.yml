@@ -1,4 +1,4 @@
-name: 'Push To Registry'
+name: 'Post to Recording Archive'
 description: 'Push a container image to an image registry'
 author: 'Red Hat'
 branding:
