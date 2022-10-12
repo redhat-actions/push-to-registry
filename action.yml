@@ -47,5 +47,5 @@ outputs:
   registry-paths:
     description: 'A JSON array of registry paths to which the tag(s) were pushed'
 runs:
-  using: 'node12'
+  using: 'node16'
   main: 'dist/index.js'
