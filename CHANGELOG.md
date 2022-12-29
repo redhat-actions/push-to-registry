@@ -1,5 +1,8 @@
 # push-to-registry Changelog
 
+## v2.7
+- Update action to run on Node16. https://github.blog/changelog/2022-05-20-actions-can-now-run-in-a-node-js-16-runtime/
+
 ## v2.6
 - Make image and tag in lowercase, if found in uppercase. https://github.com/redhat-actions/push-to-registry/issues/54
 - Remove kubic packages from the test workflows. https://github.com/redhat-actions/buildah-build/issues/93
