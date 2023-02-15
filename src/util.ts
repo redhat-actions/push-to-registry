@@ -83,6 +83,7 @@ export function getFullDockerImageName(image: string): string {
     case 1:
         return `${DOCKER_IO_NAMESPACED}/${image}`;
     case 2:
+        if (image.includes("amazonaws.com")) return image;
         return `${DOCKER_IO}/${image}`;
     default:
         return image;
