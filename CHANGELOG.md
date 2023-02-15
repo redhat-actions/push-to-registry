@@ -1,5 +1,8 @@
 # push-to-registry Changelog
 
+## v2.7.1
+- Don't add docker.io prefix to ECR images. [#69](https://github.com/redhat-actions/push-to-registry/pull/69)
+
 ## v2.7
 - Update action to run on Node16. https://github.blog/changelog/2022-05-20-actions-can-now-run-in-a-node-js-16-runtime/
 
