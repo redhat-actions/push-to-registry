@@ -382,7 +382,7 @@ async function isPodmanLocalImageLatest(): Promise<boolean> {
     return podmanImageTime > dockerImageTime;
 }
 
-async function createDockerPodmanImageStroage(): Promise<void> {
+async function createDockerPodmanImageStorage(): Promise<void> {
     core.info(`Creating temporary Podman image storage for pulling from Docker daemon`);
     dockerPodmanRoot = await fs.promises.mkdtemp(path.join(os.tmpdir(), "podman-from-docker-"));
 
@@ -405,7 +405,7 @@ async function createDockerPodmanImageStroage(): Promise<void> {
     }
 }
 
-async function removeDockerPodmanImageStroage(): Promise<void> {
+async function removeDockerPodmanImageStorage(): Promise<void> {
     if (dockerPodmanRoot) {
         try {
             core.info(`Removing temporary Podman image storage for pulling from Docker daemon`);
@@ -508,11 +508,11 @@ async function execute(
 
 async function main(): Promise<void> {
     try {
-        await createDockerPodmanImageStroage();
+        await createDockerPodmanImageStorage();
         await run();
     }
     finally {
-        await removeDockerPodmanImageStroage();
+        await removeDockerPodmanImageStorage();
     }
 }
 
