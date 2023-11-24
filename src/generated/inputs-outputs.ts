@@ -52,6 +52,18 @@ export enum Inputs {
      * Default: None.
      */
     USERNAME = "username",
+    /**
+     * Sigstore private key to use to sign container images
+     * Required: false
+     * Default: None.
+     */
+    SIGSTORE_PRIVATE_KEY = "sigstore-private-key",
+    /**
+     * Passphrase to unlock the Sigstore private key
+     * Required: false
+     * Default: None.
+     */
+    SIGN_PASSPHRASE = "sign-passphrase",
 }
 
 export enum Outputs {

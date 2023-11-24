@@ -209,6 +209,33 @@ async function run(): Promise<void> {
         }
     }
 
+    const sigstorePrivateKey = core.getInput(Inputs.SIGSTORE_PRIVATE_KEY);
+    const sigstorePrivateKeyFile = path.join(process.env.RUNNER_TEMP || "", "sigstore_private_key");
+    if (sigstorePrivateKey) {
+        // Write sigstore private key to a temporary file in $RUNNER_TEMP that
+        // will be removed after the image is pushed.
+        try {
+            await fs.promises.writeFile(sigstorePrivateKeyFile, sigstorePrivateKey);
+        }
+        catch (err) {
+            throw new Error(`Could not write sigstore private key to temporary file `
+                + `"${sigstorePrivateKeyFile}": ${err}`);
+        }
+    }
+    const signPassphrase = core.getInput(Inputs.SIGN_PASSPHRASE);
+    const signPassphraseFile = path.join(process.env.RUNNER_TEMP || "", "sign_passphrase");
+    if (signPassphrase || sigstorePrivateKey) {
+        // Write passphrase (empty string if not provided) to a temporary file
+        // in $RUNNER_TEMP that will be removed after the image is pushed.
+        try {
+            await fs.promises.writeFile(signPassphraseFile, signPassphrase || "");
+        }
+        catch (err) {
+            throw new Error(`Could not write sign passphrase to temporary file `
+                + `"${signPassphraseFile}": ${err}`);
+        }
+    }
+
     let pushMsg = `⏳ Pushing "${sourceImages.join(", ")}" to "${destinationImages.join(", ")}" respectively`;
     if (username) {
         pushMsg += ` as "${username}"`;
@@ -269,10 +296,35 @@ async function run(): Promise<void> {
             args.push(`--creds=${creds}`);
         }
 
+        if (sigstorePrivateKey) {
+            args.push("--sign-by-sigstore-private-key");
+            args.push(sigstorePrivateKeyFile);
+        }
+
+        if (signPassphrase || sigstorePrivateKey) {
+            args.push("--sign-passphrase-file");
+            args.push(signPassphraseFile);
+        }
+
         await execute(await getPodmanPath(), args);
         core.info(`✅ Successfully pushed "${sourceImages[i]}" to "${destinationImages[i]}"`);
 
         registryPathList.push(destinationImages[i]);
+
+        try {
+            await fs.promises.unlink(sigstorePrivateKeyFile);
+        }
+        catch (err) {
+            core.warning(`Failed to remove temporary file used to store sigstore private key `
+                + `"${sigstorePrivateKeyFile}": ${err}`);
+        }
+        try {
+            await fs.promises.unlink(signPassphraseFile);
+        }
+        catch (err) {
+            core.warning(`Failed to remove temporary file used to store sign passphrase `
+                + `"${signPassphraseFile}": ${err}`);
+        }
 
         try {
             const digest = (await fs.promises.readFile(digestFile)).toString();
