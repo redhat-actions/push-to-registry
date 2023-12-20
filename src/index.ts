@@ -43,6 +43,7 @@ async function getPodmanPath(): Promise<string> {
 
 async function run(): Promise<void> {
     const DEFAULT_TAG = "latest";
+    const registry = core.getInput(Inputs.REGISTRY);
     const image = core.getInput(Inputs.IMAGE);
     const tags = core.getInput(Inputs.TAGS);
     // split tags
@@ -55,20 +56,28 @@ async function run(): Promise<void> {
     }
 
     const normalizedTagsList: string[] = [];
-    let isNormalized = false;
+    let areTagsNormalized = false;
     for (const tag of tagsList) {
         normalizedTagsList.push(tag.toLowerCase());
         if (tag.toLowerCase() !== tag) {
-            isNormalized = true;
+            areTagsNormalized = true;
         }
     }
+    if (areTagsNormalized) {
+        core.warning(`Reference to tag must be lowercase.`
+        + ` Reference has been converted to be compliant with standard.`);
+    }
     const normalizedImage = image.toLowerCase();
-    if (isNormalized || image !== normalizedImage) {
-        core.warning(`Reference to image and/or tag must be lowercase.`
+    if (image !== normalizedImage) {
+        core.warning(`Reference to image must be lowercase.`
+        + ` Reference has been converted to be compliant with standard.`);
+    }
+    const normalizedRegistry = registry.toLowerCase();
+    if (registry !== normalizedRegistry) {
+        core.warning(`Reference to registry must be lowercase.`
         + ` Reference has been converted to be compliant with standard.`);
     }
 
-    const registry = core.getInput(Inputs.REGISTRY);
     const username = core.getInput(Inputs.USERNAME);
     const password = core.getInput(Inputs.PASSWORD);
     const tlsVerify = core.getInput(Inputs.TLS_VERIFY);
@@ -83,15 +92,15 @@ async function run(): Promise<void> {
         if (!normalizedImage) {
             throw new Error(`Input "${Inputs.IMAGE}" must be provided when using non full name tags`);
         }
-        if (!registry) {
+        if (!normalizedRegistry) {
             throw new Error(`Input "${Inputs.REGISTRY}" must be provided when using non full name tags`);
         }
 
-        const registryWithoutTrailingSlash = registry.replace(/\/$/, "");
+        const registryWithoutTrailingSlash = normalizedRegistry.replace(/\/$/, "");
         const registryPath = `${registryWithoutTrailingSlash}/${normalizedImage}`;
-        core.info(`Combining image name "${normalizedImage}" and registry "${registry}" `
+        core.info(`Combining image name "${normalizedImage}" and registry "${normalizedRegistry}" `
             + `to form registry path "${registryPath}"`);
-        if (normalizedImage.indexOf("/") > -1 && registry.indexOf("/") > -1) {
+        if (normalizedImage.indexOf("/") > -1 && normalizedRegistry.indexOf("/") > -1) {
             core.warning(`"${registryPath}" does not seem to be a valid registry path. `
             + `The registry path should not contain more than 2 slashes. `
             + `Refer to the Inputs section of the readme for naming image and registry.`);
@@ -104,7 +113,7 @@ async function run(): Promise<void> {
         if (normalizedImage) {
             core.warning(`Input "${Inputs.IMAGE}" is ignored when using full name tags`);
         }
-        if (registry) {
+        if (normalizedRegistry) {
             core.warning(`Input "${Inputs.REGISTRY}" is ignored when using full name tags`);
         }
 
