@@ -17,7 +17,7 @@ jobs:
   build:
     name: |-
       Build with ${{ matrix.build_with }} and push${{ matrix.fully_qualified_image_name_tag && ' FQIN' || '' }} (latest: ${{ matrix.install_latest }})
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     strategy:
       fail-fast: false
       matrix:
@@ -29,7 +29,7 @@ jobs:
 
       # Checkout push-to-registry action github repository
       - name: Checkout Push to Registry action
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       - name: Install latest podman
         if: matrix.install_latest

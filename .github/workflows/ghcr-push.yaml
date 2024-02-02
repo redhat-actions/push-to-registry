@@ -17,7 +17,7 @@ env:
 jobs:
   push-ghcr:
     name: Build and push image
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     strategy:
       fail-fast: false
       matrix:
@@ -26,7 +26,7 @@ jobs:
     steps:
       # Checkout push-to-registry action github repository
       - name: Checkout Push to Registry action
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       - name: Install latest podman
         if: matrix.install_latest
