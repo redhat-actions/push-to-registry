@@ -101,10 +101,10 @@ on: [ push ]
 jobs:
   build:
     name: Build and push image
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
 
     - name: Build Image
       id: build-image
@@ -144,13 +144,13 @@ If the image to push is present in both the Docker and Podman image storage, the
 If the action pulled an image from the Docker image storage into the Podman storage, it will be cleaned up from the Podman storage before the action exits.
 
 ## Note about GitHub runners and Podman
-We recommend using `runs-on: ubuntu-20.04` since it has a newer version of Podman.
+We recommend using `runs-on: ubuntu-22.04` since it has a newer version of Podman.
 
-If you are on `ubuntu-18.04` or any other older versions of ubuntu your workflow will use an older version of Podman and may encounter issues such as [#26](https://github.com/redhat-actions/push-to-registry/issues/26).
+If you are on `ubuntu-20.04` or any other older versions of ubuntu your workflow will use an older version of Podman and may encounter issues such as [#26](https://github.com/redhat-actions/push-to-registry/issues/26).
 
 ## Troubleshooting
 Note that quay.io repositories are private by default.<br>
 
 This means that if you push an image for the first time, you will have to authenticate before pulling it, or go to the repository's settings and change its visibility.
 
-Simiarly, if you receive a 403 Forbidden from GHCR, you may have to update the Package Settings. Refer to [this issue](https://github.com/redhat-actions/push-to-registry/issues/52).
+Similarly, if you receive a 403 Forbidden from GHCR, you may have to update the Package Settings. Refer to [this issue](https://github.com/redhat-actions/push-to-registry/issues/52).

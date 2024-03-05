@@ -11,7 +11,7 @@ inputs:
   tags:
     description: |
       'The tag or tags of the image/manifest to push.
-      For multiple tags, seperate by whitespace. For example, "latest v1"'
+      For multiple tags, separate by whitespace. For example, "latest v1"'
     required: false
     default: 'latest'
   registry:
@@ -47,5 +47,5 @@ outputs:
   registry-paths:
     description: 'A JSON array of registry paths to which the tag(s) were pushed'
 runs:
-  using: 'node16'
+  using: 'node20'
   main: 'dist/index.js'
