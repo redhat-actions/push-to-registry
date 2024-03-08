@@ -1,5 +1,8 @@
 # push-to-registry Changelog
 
+## v2.8
+- Update action to run on Node20. https://github.blog/changelog/2023-09-22-github-actions-transitioning-from-node-16-to-node-20/
+
 ## v2.7.1
 - Don't add docker.io prefix to ECR images. [#69](https://github.com/redhat-actions/push-to-registry/pull/69)
 
