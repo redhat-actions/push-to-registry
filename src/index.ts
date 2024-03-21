@@ -417,7 +417,7 @@ async function removeDockerPodmanImageStroage(): Promise<void> {
                 await getPodmanPath(),
                 [ ...dockerPodmanOpts, "rmi", "-a", "-f" ]
             );
-            await fs.promises.rmdir(dockerPodmanRoot, { recursive: true });
+            await fs.promises.rm(dockerPodmanRoot, { recursive: true });
         }
         catch (err) {
             core.warning(`Failed to remove podman image stroage ${dockerPodmanRoot}: ${err}`);
