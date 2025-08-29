@@ -12,7 +12,7 @@ on:
 jobs:
   markdown-link-check:
     name: Check links in markdown
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: gaurav-nelson/github-action-markdown-link-check@v1

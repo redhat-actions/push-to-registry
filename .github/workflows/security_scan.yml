@@ -9,7 +9,7 @@ on:
 
 jobs:
   crda-scan:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     name: Scan project vulnerability with CRDA
     steps:
 

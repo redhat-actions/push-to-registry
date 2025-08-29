@@ -17,7 +17,7 @@ env:
 jobs:
   login-and-push:
     name: Login and push image to Quay.io
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
