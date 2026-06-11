@@ -46,7 +46,8 @@ async function run(): Promise<void> {
     const image = core.getInput(Inputs.IMAGE);
     const tags = core.getInput(Inputs.TAGS);
     // split tags
-    const tagsList = tags.trim().split(/\s+/);
+    const trimmedTags = tags.trim();
+    const tagsList = trimmedTags ? trimmedTags.split(/\s+/) : [];
 
     // info message if user doesn't provides any tag
     if (tagsList.length === 0) {
