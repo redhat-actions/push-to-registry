@@ -1,5 +1,8 @@
 # push-to-registry Changelog
 
+## v2.9
+- Update action to run on Node24. https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+
 ## v2.8
 - Update action to run on Node20. https://github.blog/changelog/2023-09-22-github-actions-transitioning-from-node-16-to-node-20/
 
