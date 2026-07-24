@@ -43,6 +43,13 @@ export enum Inputs {
      */
     REGISTRY = "registry",
     /**
+     * Use podman in remote mode (--remote). When true, --remote is passed to
+     * all podman commands and Docker image storage checks are skipped.
+     * Required: false
+     * Default: "false"
+     */
+    REMOTE = "remote",
+    /**
      * Passphrase to unlock the Sigstore private key
      * Required: false
      * Default: None.

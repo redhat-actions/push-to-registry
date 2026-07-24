@@ -39,6 +39,13 @@ inputs:
   sign-passphrase:
     description: 'Passphrase to unlock the Sigstore private key'
     required: false
+  remote:
+    description: |
+      Use podman in remote mode (--remote). When true, --remote is passed to
+      all podman commands and Docker image storage checks are skipped, since
+      the Docker daemon is not accessible over the remote connection.
+    required: false
+    default: 'false'
   podman-args:
     description: |
       Global args to be passed to all podman commands (before the subcommand).
