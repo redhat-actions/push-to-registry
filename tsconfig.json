@@ -1,11 +1,21 @@
 {
-    "extends": "@redhat-actions/tsconfig",
-    "compilerOptions": {
-      "rootDir": "src/",
-      "outDir": "out/"
-    },
-    "include": [
-      "src/"
-    ],
-  }
-  
+  "compilerOptions": {
+    "target": "es2024",
+    "module": "preserve",
+    "moduleResolution": "bundler",
+    "lib": ["es2024"],
+    "outDir": "out/",
+    "rootDir": "src/",
+    "sourceMap": true,
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "types": ["node"]
+  },
+  "include": ["src/"]
+}
