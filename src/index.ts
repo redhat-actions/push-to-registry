@@ -210,6 +210,35 @@ async function run(): Promise<void> {
         }
     }
 
+    // Set up Sigstore signing files before the push loop so they persist
+    // across all tag pushes and are cleaned up once afterward.
+    const sigstorePrivateKey = core.getInput(Inputs.SIGSTORE_PRIVATE_KEY);
+    const runnerTemp = process.env.RUNNER_TEMP || os.tmpdir();
+    const sigstorePrivateKeyFile = path.join(runnerTemp, "sigstore_private_key");
+    if (sigstorePrivateKey) {
+        try {
+            await fs.promises.writeFile(sigstorePrivateKeyFile, sigstorePrivateKey);
+        }
+        catch (err) {
+            throw new Error(`Could not write sigstore private key to temporary file `
+                + `"${sigstorePrivateKeyFile}"`, { cause: err });
+        }
+    }
+
+    const signPassphrase = core.getInput(Inputs.SIGN_PASSPHRASE);
+    const signPassphraseFile = path.join(runnerTemp, "sign_passphrase");
+    if (signPassphrase || sigstorePrivateKey) {
+        // Write passphrase (empty string if not provided) so that podman
+        // does not prompt interactively.
+        try {
+            await fs.promises.writeFile(signPassphraseFile, signPassphrase || "");
+        }
+        catch (err) {
+            throw new Error(`Could not write sign passphrase to temporary file `
+                + `"${signPassphraseFile}"`, { cause: err });
+        }
+    }
+
     let pushMsg = `⏳ Pushing "${sourceImages.join(", ")}" to "${destinationImages.join(", ")}" respectively`;
     if (username) {
         pushMsg += ` as "${username}"`;
@@ -235,60 +264,86 @@ async function run(): Promise<void> {
         )}_digest.txt`;
     }
 
-    // push the image
-    for (let i = 0; i < destinationImages.length; i++) {
-        const args = [];
-        if (isImageFromDocker) {
-            args.push(...dockerPodmanOpts);
-        }
-        if (isManifest) {
-            args.push("manifest");
-        }
-        args.push(...[
-            "push",
-            "--quiet",
-            "--digestfile",
-            digestFile,
-            isImageFromDocker ? getFullDockerImageName(sourceImages[i]) : sourceImages[i],
-            destinationImages[i],
-        ]);
-        // to push all the images referenced in the manifest
-        if (isManifest) {
-            args.push("--all");
-        }
-        if (podmanExtraArgs.length > 0) {
-            args.push(...podmanExtraArgs);
-        }
+    try {
+        // push the image
+        for (let i = 0; i < destinationImages.length; i++) {
+            const args = [];
+            if (isImageFromDocker) {
+                args.push(...dockerPodmanOpts);
+            }
+            if (isManifest) {
+                args.push("manifest");
+            }
+            args.push(...[
+                "push",
+                "--quiet",
+                "--digestfile",
+                digestFile,
+                isImageFromDocker ? getFullDockerImageName(sourceImages[i]) : sourceImages[i],
+                destinationImages[i],
+            ]);
+            // to push all the images referenced in the manifest
+            if (isManifest) {
+                args.push("--all");
+            }
+            if (podmanExtraArgs.length > 0) {
+                args.push(...podmanExtraArgs);
+            }
 
-        // check if tls-verify is not set to null
-        if (tlsVerify) {
-            args.push(`--tls-verify=${tlsVerify}`);
-        }
+            // check if tls-verify is not set to null
+            if (tlsVerify) {
+                args.push(`--tls-verify=${tlsVerify}`);
+            }
 
-        // check if registry creds are provided
-        if (creds) {
-            args.push(`--creds=${creds}`);
-        }
+            // check if registry creds are provided
+            if (creds) {
+                args.push(`--creds=${creds}`);
+            }
 
-        await execute(await getPodmanPath(), args);
-        core.info(`✅ Successfully pushed "${sourceImages[i]}" to "${destinationImages[i]}"`);
+            if (sigstorePrivateKey) {
+                args.push("--sign-by-sigstore-private-key");
+                args.push(sigstorePrivateKeyFile);
+            }
 
-        registryPathList.push(destinationImages[i]);
+            if (signPassphrase || sigstorePrivateKey) {
+                args.push("--sign-passphrase-file");
+                args.push(signPassphraseFile);
+            }
 
-        try {
-            const digest = (await fs.promises.readFile(digestFile)).toString();
-            core.info(digest);
-            // the digest should be the same for every image, but we log it every time
-            // due to https://github.com/redhat-actions/push-to-registry/issues/26
-            core.setOutput(Outputs.DIGEST, digest);
+            await execute(await getPodmanPath(), args);
+            core.info(`✅ Successfully pushed "${sourceImages[i]}" to "${destinationImages[i]}"`);
+
+            registryPathList.push(destinationImages[i]);
+
+            try {
+                const digest = (await fs.promises.readFile(digestFile)).toString();
+                core.info(digest);
+                // the digest should be the same for every image, but we log it every time
+                // due to https://github.com/redhat-actions/push-to-registry/issues/26
+                core.setOutput(Outputs.DIGEST, digest);
+            }
+            catch (err) {
+                core.warning(`Failed to read digest file "${digestFile}": ${err}`);
+            }
         }
-        catch (err) {
-            core.warning(`Failed to read digest file "${digestFile}": ${err}`);
-        }
+    }
+    finally {
+        // Clean up temporary signing files after all pushes complete
+        await cleanupTempFile(sigstorePrivateKeyFile);
+        await cleanupTempFile(signPassphraseFile);
     }
 
     core.setOutput(Outputs.REGISTRY_PATH, registryPathList[0]);
     core.setOutput(Outputs.REGISTRY_PATHS, JSON.stringify(registryPathList));
+}
+
+async function cleanupTempFile(filePath: string): Promise<void> {
+    try {
+        await fs.promises.unlink(filePath);
+    }
+    catch {
+        // File may not exist if it was never created; that is not an error.
+    }
 }
 
 async function pullImageFromDocker(): Promise<ImageStorageCheckResult> {

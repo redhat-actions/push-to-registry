@@ -32,6 +32,8 @@ Refer to the [`podman push`](http://docs.podman.io/en/latest/markdown/podman-man
 | password | Password, encrypted password, or access token to use to log in to the registry. Required unless already logged in to the registry. | None
 | tls-verify | Verify TLS certificates when contacting the registry. Set to `false` to skip certificate verification. | `true`
 | digestfile | After copying the image, write the digest of the resulting image to the file. The contents of this file are the digest output. | Auto-generated from image and tag
+| sigstore-private-key | Sigstore private key to use to sign container images. | None
+| sign-passphrase | Passphrase to unlock the Sigstore private key. | None
 | extra-args | Extra args to be passed to podman push. Separate arguments by newline. Do not use quotes. | None
 
 <a id="image-tag-inputs"></a>
@@ -144,9 +146,10 @@ If the image to push is present in both the Docker and Podman image storage, the
 If the action pulled an image from the Docker image storage into the Podman storage, it will be cleaned up from the Podman storage before the action exits.
 
 ## Note about GitHub runners and Podman
-We recommend using `runs-on: ubuntu-22.04` since it has a newer version of Podman.
 
-If you are on `ubuntu-20.04` or any other older versions of ubuntu your workflow will use an older version of Podman and may encounter issues such as [#26](https://github.com/redhat-actions/push-to-registry/issues/26).
+We recommend using `runs-on: ubuntu-24.04` since it has a newer version of Podman.
+
+If you are on `ubuntu-22.04` or any other older versions of ubuntu your workflow will use an older version of Podman and may encounter issues such as [#26](https://github.com/redhat-actions/push-to-registry/issues/26).
 
 ## Troubleshooting
 Note that quay.io repositories are private by default.<br>
