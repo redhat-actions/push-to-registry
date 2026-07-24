@@ -5,6 +5,13 @@ on:
   schedule:
     - cron: '0 0 * * *'  # every day at midnight
 
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 env:
   IMAGE_REGISTRY: quay.io
   IMAGE_NAMESPACE: redhat-github-actions
@@ -17,7 +24,7 @@ jobs:
   build:
     name: |-
       Build with ${{ matrix.build_with }} and push${{ matrix.fully_qualified_image_name_tag && ' FQIN' || '' }} (latest: ${{ matrix.install_latest }})
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
       matrix:
@@ -29,7 +36,7 @@ jobs:
 
       # Checkout push-to-registry action github repository
       - name: Checkout Push to Registry action
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Install latest podman
         if: matrix.install_latest
