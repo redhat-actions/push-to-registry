@@ -44,7 +44,8 @@ export enum Inputs {
     REGISTRY = "registry",
     /**
      * Use podman in remote mode (--remote). When true, --remote is passed to
-     * all podman commands and Docker image storage checks are skipped.
+     * all podman commands and Docker image storage checks are skipped, since
+     * the Docker daemon is not accessible over the remote connection.
      * Required: false
      * Default: "false"
      */
