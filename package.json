@@ -26,7 +26,7 @@
     "@actions/core": "^3.0.1",
     "@actions/exec": "^3.0.0",
     "@actions/io": "^3.0.2",
-    "ini": "^5.0.0"
+    "ini": "^7.0.0"
   },
   "devDependencies": {
     "@redhat-actions/action-io-generator": "^1.5.0",
