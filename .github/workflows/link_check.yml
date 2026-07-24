@@ -22,6 +22,6 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v7
-      - uses: gaurav-nelson/github-action-markdown-link-check@v1
+      - uses: tcort/github-action-markdown-link-check@v1
         with:
           use-verbose-mode: true
