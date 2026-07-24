@@ -34,6 +34,18 @@ export enum Inputs {
      */
     REGISTRY = "registry",
     /**
+     * Passphrase to unlock the Sigstore private key
+     * Required: false
+     * Default: None.
+     */
+    SIGN_PASSPHRASE = "sign-passphrase",
+    /**
+     * Sigstore private key to use to sign container images
+     * Required: false
+     * Default: None.
+     */
+    SIGSTORE_PRIVATE_KEY = "sigstore-private-key",
+    /**
      * 'The tag or tags of the image/manifest to push.
      * For multiple tags, separate by whitespace. For example, "latest v1"'
      * Required: false
