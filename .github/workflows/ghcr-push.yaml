@@ -7,6 +7,15 @@ on:
   workflow_dispatch:
   schedule:
     - cron: '0 0 * * *'  # every day at midnight
+
+permissions:
+  contents: read
+  packages: write
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 env:
     IMAGE_NAME: ptr-test
     IMAGE_TAGS: v1 ${{ github.sha }}
@@ -17,7 +26,7 @@ env:
 jobs:
   push-ghcr:
     name: Build and push image
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
       matrix:
@@ -26,7 +35,7 @@ jobs:
     steps:
       # Checkout push-to-registry action github repository
       - name: Checkout Push to Registry action
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Install latest podman
         if: matrix.install_latest
@@ -36,7 +45,7 @@ jobs:
       # Build image using Buildah action
       - name: Build Image
         id: build_image
-        uses: redhat-actions/buildah-build@v2
+        uses: redhat-actions/buildah-build@v3
         with:
           image: ${{ env.IMAGE_NAME }}
           tags: ${{ env.IMAGE_TAGS }}

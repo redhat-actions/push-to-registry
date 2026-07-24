@@ -7,18 +7,21 @@ on:
   # schedule:
   #   - cron: '0 0 * * *'  # every day at midnight
 
+permissions:
+  contents: read
+
 jobs:
   crda-scan:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     name: Scan project vulnerability with CRDA
     steps:
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
-          node-version: '20'
+          node-version: '24'
 
       - name: Install CRDA
         uses: redhat-actions/openshift-tools-installer@v1
