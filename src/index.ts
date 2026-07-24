@@ -31,6 +31,7 @@ let sourceImages: string[];
 let destinationImages: string[];
 let dockerPodmanRoot: string;
 let dockerPodmanOpts: string[];
+let globalPodmanArgs: string[] = [];
 
 async function getPodmanPath(): Promise<string> {
     if (podmanPath == null) {
@@ -56,30 +57,46 @@ async function run(): Promise<void> {
         tagsList.push(DEFAULT_TAG);
     }
 
+    // Determine tag format before normalization so we know how to normalize.
+    const isFullImageNameTag = tagsList.length > 0 && isFullImageName(tagsList[0]);
+    if (tagsList.some((tag) => isFullImageName(tag) !== isFullImageNameTag)) {
+        throw new Error(`Input "${Inputs.TAGS}" cannot have a mix of full name and non full name tags`);
+    }
+
+    // Normalize per OCI distribution spec: image names and registries must be
+    // lowercase, but tags may contain uppercase characters.
     const normalizedTagsList: string[] = [];
-    let isNormalized = false;
-    for (const tag of tagsList) {
-        normalizedTagsList.push(tag.toLowerCase());
-        if (tag.toLowerCase() !== tag) {
-            isNormalized = true;
+    let imageRefsNormalized = false;
+
+    if (isFullImageNameTag) {
+        // Full image name tags like "Quay.io/User/Image:MyTag"
+        // Lowercase the image reference, preserve the tag
+        for (const tag of tagsList) {
+            const colonIndex = tag.lastIndexOf(":");
+            const imagePart = tag.substring(0, colonIndex).toLowerCase();
+            const tagPart = tag.substring(colonIndex + 1);
+            const normalized = `${imagePart}:${tagPart}`;
+            normalizedTagsList.push(normalized);
+            if (normalized !== tag) {
+                imageRefsNormalized = true;
+            }
         }
     }
+    else {
+        // Simple tags like "v1", "Latest" - preserve as-is per OCI spec
+        normalizedTagsList.push(...tagsList);
+    }
+
     const normalizedImage = image.toLowerCase();
     const normalizedRegistry = registry.toLowerCase();
-    if (isNormalized || image !== normalizedImage || registry !== normalizedRegistry) {
-        core.warning(`Reference to image, tag, and/or registry must be lowercase.`
-        + ` Reference has been converted to be compliant with standard.`);
+    if (imageRefsNormalized || image !== normalizedImage || registry !== normalizedRegistry) {
+        core.warning(`Image and/or registry reference has been lowercased `
+        + `to comply with the OCI distribution specification.`);
     }
     const username = core.getInput(Inputs.USERNAME);
     const password = core.getInput(Inputs.PASSWORD);
     const tlsVerify = core.getInput(Inputs.TLS_VERIFY);
     const digestFileInput = core.getInput(Inputs.DIGESTFILE);
-
-    // check if all tags provided are in `image:tag` format
-    const isFullImageNameTag = isFullImageName(normalizedTagsList[0]);
-    if (normalizedTagsList.some((tag) => isFullImageName(tag) !== isFullImageNameTag)) {
-        throw new Error(`Input "${Inputs.TAGS}" cannot have a mix of full name and non full name tags`);
-    }
     if (!isFullImageNameTag) {
         if (!normalizedImage) {
             throw new Error(`Input "${Inputs.IMAGE}" must be provided when using non full name tags`);
@@ -111,6 +128,15 @@ async function run(): Promise<void> {
 
         sourceImages = normalizedTagsList;
         destinationImages = normalizedTagsList;
+    }
+
+    const inputPodmanArgsStr = core.getInput(Inputs.PODMAN_ARGS);
+    if (inputPodmanArgsStr) {
+        // Global args are prepended before the subcommand in every podman invocation
+        const lines = splitByNewline(inputPodmanArgsStr);
+        globalPodmanArgs = lines.flatMap((line) => line.split(" "))
+            .map((arg) => arg.trim())
+            .filter((arg) => arg);
     }
 
     const inputExtraArgsStr = core.getInput(Inputs.EXTRA_ARGS);
@@ -267,19 +293,33 @@ async function run(): Promise<void> {
     try {
         // push the image
         for (let i = 0; i < destinationImages.length; i++) {
-            const args = [];
+            const args = [ ...globalPodmanArgs ];
             if (isImageFromDocker) {
                 args.push(...dockerPodmanOpts);
             }
             if (isManifest) {
                 args.push("manifest");
             }
+
+            // Qualify local source images with localhost/ to prevent podman
+            // from resolving unqualified names to remote registries (#66).
+            let pushSource: string;
+            if (isImageFromDocker) {
+                pushSource = getFullDockerImageName(sourceImages[i]);
+            }
+            else if (isFullImageNameTag) {
+                pushSource = sourceImages[i];
+            }
+            else {
+                pushSource = `localhost/${sourceImages[i]}`;
+            }
+
             args.push(...[
                 "push",
                 "--quiet",
                 "--digestfile",
                 digestFile,
-                isImageFromDocker ? getFullDockerImageName(sourceImages[i]) : sourceImages[i],
+                pushSource,
                 destinationImages[i],
             ]);
             // to push all the images referenced in the manifest
@@ -354,7 +394,7 @@ async function pullImageFromDocker(): Promise<ImageStorageCheckResult> {
         for (const imageWithTag of sourceImages) {
             const commandResult: ExecResult = await execute(
                 await getPodmanPath(),
-                [ ...dockerPodmanOpts, "pull", `docker-daemon:${imageWithTag}` ],
+                [ ...globalPodmanArgs, ...dockerPodmanOpts, "pull", `docker-daemon:${imageWithTag}` ],
                 { ignoreReturnCode: true, failOnStdErr: false, group: true }
             );
             if (commandResult.exitCode === 0) {
@@ -386,7 +426,7 @@ async function checkImageInPodman(): Promise<ImageStorageCheckResult> {
         for (const imageWithTag of sourceImages) {
             const commandResult: ExecResult = await execute(
                 await getPodmanPath(),
-                [ "image", "exists", imageWithTag ],
+                [ ...globalPodmanArgs, "image", "exists", imageWithTag ],
                 { ignoreReturnCode: true }
             );
             if (commandResult.exitCode === 0) {
@@ -416,6 +456,7 @@ async function isPodmanLocalImageLatest(): Promise<boolean> {
 
     // get creation time of the image present in the Podman image storage
     const podmanLocalImageTimeStamp = await execute(await getPodmanPath(), [
+        ...globalPodmanArgs,
         "image",
         "inspect",
         imageWithTag,
@@ -427,6 +468,7 @@ async function isPodmanLocalImageLatest(): Promise<boolean> {
     // appending 'docker.io/library' infront of image name as pulled image name
     // from Docker image storage starts with the 'docker.io/library'
     const pulledImageCreationTimeStamp = await execute(await getPodmanPath(), [
+        ...globalPodmanArgs,
         ...dockerPodmanOpts,
         "image",
         "inspect",
@@ -471,7 +513,7 @@ async function removeDockerPodmanImageStorage(): Promise<void> {
             core.info(`Removing temporary Podman image storage for pulling from Docker daemon`);
             await execute(
                 await getPodmanPath(),
-                [ ...dockerPodmanOpts, "rmi", "-a", "-f" ]
+                [ ...globalPodmanArgs, ...dockerPodmanOpts, "rmi", "-a", "-f" ]
             );
             await fs.promises.rm(dockerPodmanRoot, { recursive: true });
         }
@@ -489,7 +531,7 @@ async function checkIfManifestsExists(): Promise<boolean> {
     for (const manifest of sourceImages) {
         const commandResult: ExecResult = await execute(
             await getPodmanPath(),
-            [ "manifest", "exists", manifest ],
+            [ ...globalPodmanArgs, "manifest", "exists", manifest ],
             { ignoreReturnCode: true, group: true }
         );
         if (commandResult.exitCode === 0) {
