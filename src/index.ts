@@ -30,8 +30,9 @@ let isImageFromDocker = false;
 let sourceImages: string[];
 let destinationImages: string[];
 let dockerPodmanRoot: string;
-let dockerPodmanOpts: string[];
+let dockerPodmanOpts: string[] = [];
 let globalPodmanArgs: string[] = [];
+let isRemoteMode = false;
 
 async function getPodmanPath(): Promise<string> {
     if (podmanPath == null) {
@@ -171,68 +172,81 @@ async function run(): Promise<void> {
             + `not found in Podman image storage`);
         }
 
-        // check if image with all the required tags exist in Docker image storage
-        // and if exist pull the image with all the tags to Podman
-        const dockerImageStorageCheckResult: ImageStorageCheckResult = await pullImageFromDocker();
-
-        const dockerFoundTags: string[] = dockerImageStorageCheckResult.foundTags;
-        const dockerMissingTags: string[] = dockerImageStorageCheckResult.missingTags;
-
-        if (dockerFoundTags.length > 0) {
-            core.info(`Tag${dockerFoundTags.length !== 1 ? "s" : ""} "${dockerFoundTags.join(", ")}" `
-            + `found in Docker image storage`);
+        if (isRemoteMode) {
+            // In remote mode, Docker image storage is not accessible.
+            // All tags must be present in the remote Podman image storage.
+            if (podmanMissingTags.length > 0) {
+                throw new Error(
+                    `❌ Tag${podmanMissingTags.length !== 1 ? "s" : ""} `
+                    + `"${podmanMissingTags.join(", ")}" not found in remote Podman image storage.`
+                );
+            }
+            core.info("Image(s) will be pushed from remote Podman image storage.");
         }
+        else {
+            // check if image with all the required tags exist in Docker image storage
+            // and if exist pull the image with all the tags to Podman
+            const dockerImageStorageCheckResult: ImageStorageCheckResult = await pullImageFromDocker();
 
-        // Log warning if few tags are not found
-        if (dockerMissingTags.length > 0 && dockerFoundTags.length > 0) {
-            core.warning(`Tag${dockerMissingTags.length !== 1 ? "s" : ""} "${dockerMissingTags.join(", ")}" `
-            + `not found in Docker image storage`);
-        }
+            const dockerFoundTags: string[] = dockerImageStorageCheckResult.foundTags;
+            const dockerMissingTags: string[] = dockerImageStorageCheckResult.missingTags;
 
-        // failing if image with any of the tag is not found in Docker as well as Podman
-        if (podmanMissingTags.length > 0 && dockerMissingTags.length > 0) {
-            throw new Error(
-                `❌ All tags were not found in either Podman image storage, or Docker image storage. `
-                + `Tag${podmanMissingTags.length !== 1 ? "s" : ""} "${podmanMissingTags.join(", ")}" `
-                + `not found in Podman image storage, and tag${dockerMissingTags.length !== 1 ? "s" : ""} `
-                + `"${dockerMissingTags.join(", ")}" not found in Docker image storage.`
-            );
-        }
+            if (dockerFoundTags.length > 0) {
+                core.info(`Tag${dockerFoundTags.length !== 1 ? "s" : ""} "${dockerFoundTags.join(", ")}" `
+                + `found in Docker image storage`);
+            }
 
-        const allTagsinPodman: boolean = podmanFoundTags.length === normalizedTagsList.length;
-        const allTagsinDocker: boolean = dockerFoundTags.length === normalizedTagsList.length;
+            // Log warning if few tags are not found
+            if (dockerMissingTags.length > 0 && dockerFoundTags.length > 0) {
+                core.warning(`Tag${dockerMissingTags.length !== 1 ? "s" : ""} "${dockerMissingTags.join(", ")}" `
+                + `not found in Docker image storage`);
+            }
 
-        if (allTagsinPodman && allTagsinDocker) {
-            const isPodmanImageLatest = await isPodmanLocalImageLatest();
-            if (!isPodmanImageLatest) {
-                core.warning(
-                    `The version of "${sourceImages[0]}" in the Docker image storage is more recent `
-                        + `than the version in the Podman image storage. The image(s) from the Docker image storage `
-                        + `will be pushed.`
+            // failing if image with any of the tag is not found in Docker as well as Podman
+            if (podmanMissingTags.length > 0 && dockerMissingTags.length > 0) {
+                throw new Error(
+                    `❌ All tags were not found in either Podman image storage, or Docker image storage. `
+                    + `Tag${podmanMissingTags.length !== 1 ? "s" : ""} "${podmanMissingTags.join(", ")}" `
+                    + `not found in Podman image storage, and tag${dockerMissingTags.length !== 1 ? "s" : ""} `
+                    + `"${dockerMissingTags.join(", ")}" not found in Docker image storage.`
+                );
+            }
+
+            const allTagsinPodman: boolean = podmanFoundTags.length === normalizedTagsList.length;
+            const allTagsinDocker: boolean = dockerFoundTags.length === normalizedTagsList.length;
+
+            if (allTagsinPodman && allTagsinDocker) {
+                const isPodmanImageLatest = await isPodmanLocalImageLatest();
+                if (!isPodmanImageLatest) {
+                    core.warning(
+                        `The version of "${sourceImages[0]}" in the Docker image storage is more recent `
+                            + `than the version in the Podman image storage. The image(s) from the Docker `
+                            + `image storage will be pushed.`
+                    );
+                    isImageFromDocker = true;
+                }
+                else {
+                    core.warning(
+                        `The version of "${sourceImages[0]}" in the Podman image storage is more recent `
+                            + `than the version in the Docker image storage. The image(s) from the Podman `
+                            + `image storage will be pushed.`
+                    );
+                }
+            }
+            else if (allTagsinDocker) {
+                core.info(
+                    `Tag "${sourceImages[0]}" was found in the Docker image storage, but not in the `
+                        + `Podman image storage. The image(s) will be pulled into Podman image storage, `
+                        + `pushed, and then removed from the Podman image storage.`
                 );
                 isImageFromDocker = true;
             }
             else {
-                core.warning(
-                    `The version of "${sourceImages[0]}" in the Podman image storage is more recent `
-                        + `than the version in the Docker image storage. The image(s) from the Podman image `
-                        + `storage will be pushed.`
+                core.info(
+                    `Tag "${sourceImages[0]}" was found in the Podman image storage, but not in the `
+                        + `Docker image storage. The image(s) will be pushed from Podman image storage.`
                 );
             }
-        }
-        else if (allTagsinDocker) {
-            core.info(
-                `Tag "${sourceImages[0]}" was found in the Docker image storage, but not in the Podman `
-                    + `image storage. The image(s) will be pulled into Podman image storage, pushed, and then `
-                    + `removed from the Podman image storage.`
-            );
-            isImageFromDocker = true;
-        }
-        else {
-            core.info(
-                `Tag "${sourceImages[0]}" was found in the Podman image storage, but not in the Docker `
-                    + `image storage. The image(s) will be pushed from Podman image storage.`
-            );
         }
     }
 
@@ -609,12 +623,24 @@ async function execute(
 }
 
 async function main(): Promise<void> {
+    isRemoteMode = core.getInput(Inputs.REMOTE) === "true";
+
+    if (isRemoteMode) {
+        globalPodmanArgs.push("--remote");
+        core.info("Running in remote mode (--remote). "
+            + "Docker image storage checks will be skipped.");
+    }
+
     try {
-        await createDockerPodmanImageStorage();
+        if (!isRemoteMode) {
+            await createDockerPodmanImageStorage();
+        }
         await run();
     }
     finally {
-        await removeDockerPodmanImageStorage();
+        if (!isRemoteMode) {
+            await removeDockerPodmanImageStorage();
+        }
     }
 }
 

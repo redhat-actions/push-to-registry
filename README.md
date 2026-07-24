@@ -34,6 +34,7 @@ Refer to the [`podman push`](http://docs.podman.io/en/latest/markdown/podman-man
 | digestfile | After copying the image, write the digest of the resulting image to the file. The contents of this file are the digest output. | Auto-generated from image and tag
 | sigstore-private-key | Sigstore private key to use to sign container images. | None
 | sign-passphrase | Passphrase to unlock the Sigstore private key. | None
+| remote | Use podman in remote mode (`--remote`). When `true`, Docker image storage checks are skipped. | `false`
 | podman-args | Global args to be passed to all podman commands (before the subcommand). Use this for options like `--storage-driver=vfs`. Separate arguments by newline. | None
 | extra-args | Extra args to be passed to podman push. Separate arguments by newline. Do not use quotes. | None
 
@@ -180,6 +181,25 @@ If the image to push is present in the Docker image storage but not in the Podma
 If the image to push is present in both the Docker and Podman image storage, the action will push the image which was more recently built, and log a warning.
 
 If the action pulled an image from the Docker image storage into the Podman storage, it will be cleaned up from the Podman storage before the action exits.
+
+## Podman Remote Mode
+
+If you are using `podman --remote` (e.g. with a wrapper or a remote podman server), set `remote: true`:
+
+```yaml
+- uses: redhat-actions/push-to-registry@v3
+  with:
+    image: my-image
+    tags: latest
+    registry: quay.io/my-namespace
+    remote: true
+```
+
+When `remote` is enabled:
+- `--remote` is automatically passed to all podman commands
+- Docker image storage checks are skipped (the Docker daemon is not accessible over the remote connection)
+- All image tags must be present in the remote Podman image storage
+- Temporary local storage creation is skipped (not relevant for remote operations)
 
 ## Note about GitHub runners and Podman
 
