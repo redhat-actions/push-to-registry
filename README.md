@@ -21,7 +21,7 @@ You can log in to your container registry for the entire job using the [**podman
 
 ## Action Inputs
 
-Refer to the [`podman push`](http://docs.podman.io/en/latest/markdown/podman-manifest-push.1.html) documentation for more information.
+Refer to the [`podman push`](https://docs.podman.io/en/latest/markdown/podman-manifest-push.1.html) documentation for more information.
 
 | Input Name | Description | Default |
 | ---------- | ----------- | ------- |
