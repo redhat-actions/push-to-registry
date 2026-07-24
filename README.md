@@ -25,9 +25,9 @@ Refer to the [`podman push`](http://docs.podman.io/en/latest/markdown/podman-man
 
 | Input Name | Description | Default |
 | ---------- | ----------- | ------- |
-| image	| Name of the image or manifest you want to push. Eg. `username/imagename` or `imagename`. Refer to [Image and Tag Inputs](https://github.com/redhat-actions/push-to-registry#image-tag-inputs). | **Required** - unless all tags include registry and image name
-| tags | The tag or tags of the image or manifest to push. For multiple tags, separate by whitespace. Refer to [Image and Tag Inputs](https://github.com/redhat-actions/push-to-registry#image-tag-inputs). | `latest`
-| registry | Hostname and optional namespace to push the image to. Eg. `quay.io` or `quay.io/username`. Refer to [Image and Tag Inputs](https://github.com/redhat-actions/push-to-registry#image-tag-inputs). | **Required** - unless all tags include registry and image name
+| image	| Name of the image or manifest you want to push. Eg. `username/imagename` or `imagename`. Refer to [Image and Tag Inputs](https://github.com/redhat-actions/push-to-registry#image-tag-inputs). Automatically lowercased for convenience. | **Required** - unless all tags include registry and image name
+| tags | The tag or tags of the image or manifest to push. For multiple tags, separate by whitespace. Refer to [Image and Tag Inputs](https://github.com/redhat-actions/push-to-registry#image-tag-inputs). Automatically lowercased for convenience. | `latest`
+| registry | Hostname and optional namespace to push the image to. Eg. `quay.io` or `quay.io/username`. Refer to [Image and Tag Inputs](https://github.com/redhat-actions/push-to-registry#image-tag-inputs). Automatically lowercased for convenience. | **Required** - unless all tags include registry and image name
 | username | Username with which to authenticate to the registry. Required unless already logged in to the registry. | None
 | password | Password, encrypted password, or access token to use to log in to the registry. Required unless already logged in to the registry. | None
 | tls-verify | Verify TLS certificates when contacting the registry. Set to `false` to skip certificate verification. | `true`

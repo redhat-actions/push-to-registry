@@ -19,7 +19,7 @@ concurrency:
 env:
     IMAGE_NAME: ImageCaseTest
     IMAGE_TAGS: v1 TagCaseTest ${{ github.sha }}
-    IMAGE_REGISTRY: Ghcr.io/${{ github.repository_owner }}
+    IMAGE_REGISTRY: Ghcr.io/MixedCaseOwner
     REGISTRY_USER: ${{ github.actor }}
     REGISTRY_PASSWORD: ${{ github.token }}
 
