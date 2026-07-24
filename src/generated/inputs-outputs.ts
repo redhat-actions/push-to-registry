@@ -28,6 +28,15 @@ export enum Inputs {
      */
     PASSWORD = "password",
     /**
+     * Global args to be passed to all podman commands (before the subcommand).
+     * Use this for options like --storage-driver=vfs that must apply to every
+     * podman invocation (image exists, manifest exists, push, etc.).
+     * Separate arguments by newline. Do not use quotes.
+     * Required: false
+     * Default: None.
+     */
+    PODMAN_ARGS = "podman-args",
+    /**
      * Hostname and optional namespace to push the image to (eg. quay.io/username or quay.io)
      * Required: false
      * Default: None.

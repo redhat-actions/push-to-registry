@@ -39,6 +39,13 @@ inputs:
   sign-passphrase:
     description: 'Passphrase to unlock the Sigstore private key'
     required: false
+  podman-args:
+    description: |
+      Global args to be passed to all podman commands (before the subcommand).
+      Use this for options like --storage-driver=vfs that must apply to every
+      podman invocation (image exists, manifest exists, push, etc.).
+      Separate arguments by newline. Do not use quotes.
+    required: false
   extra-args:
     description: |
       Extra args to be passed to podman push.
