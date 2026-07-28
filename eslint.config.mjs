@@ -9,6 +9,7 @@ export default tseslint.config(
             "out/",
             "lib/",
             "eslint.config.mjs",
+            "src/**/*.test.ts",
         ],
     },
     js.configs.recommended,
