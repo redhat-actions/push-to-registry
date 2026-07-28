@@ -61,7 +61,7 @@ jobs:
 
       # Authenticate to container image registry to push the image
       - name: Podman Login
-        uses: redhat-actions/podman-login@v1
+        uses: redhat-actions/podman-login@v2
         with:
           registry: quay.io
           username: ${{ secrets.REGISTRY_USER }}
