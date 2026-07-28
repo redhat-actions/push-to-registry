@@ -42,6 +42,8 @@ async function getPodmanPath(): Promise<string> {
 }
 
 async function run(): Promise<void> {
+    core.warning("push-to-registry@v2 is deprecated and will no longer receive updates. Please upgrade to v3: https://github.com/redhat-actions/push-to-registry");
+
     const DEFAULT_TAG = "latest";
     const image = core.getInput(Inputs.IMAGE);
     const tags = core.getInput(Inputs.TAGS);
