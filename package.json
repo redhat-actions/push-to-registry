@@ -34,7 +34,7 @@
     "@types/ini": "^4.1.1",
     "@types/node": "^26.4.1",
     "@vercel/ncc": "^0.45.0",
-    "eslint": "^10.9.1",
+    "eslint": "^10.10.0",
     "typescript": "~6.0.3",
     "typescript-eslint": "^8.69.0"
   }
